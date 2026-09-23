@@ -1,5 +1,8 @@
 package eu.tudek.squared_board.game
 
+import androidx.annotation.StringRes
+import eu.tudek.squared_board.R
+
 enum class Screen { HOME, GAME, RESULT, BOARD }
 
 enum class Mode { ADVENTURE, RACE }
@@ -24,10 +27,10 @@ data class GameState(
     val locked: Boolean = false,
     val typed: String = "",
     val chosen: Int? = null,
-    val feedback: String = "",
+    val feedback: UiText? = null,
     val feedbackOk: Boolean? = null,
     val showNext: Boolean = false,
-    val nextLabel: String = "Dalej",
+    @StringRes val nextLabel: Int = R.string.game_next,
     val millisLeft: Long = RACE_MS,
     /** Bumped on a wrong answer to retrigger the card's shake. */
     val shakeTick: Int = 0,
@@ -51,19 +54,19 @@ data class ResultState(
     val wrong: List<String>,
     val confetti: Boolean,
 ) {
-    val title: String
-        get() = if (newRecord && correct > 0) "Nowy rekord!" else when (stars) {
-            3 -> "Wspaniale!"
-            2 -> "Bardzo dobrze!"
-            1 -> "Dobry początek!"
-            else -> "Spróbuj jeszcze raz!"
+    @get:StringRes
+    val title: Int
+        get() = if (newRecord && correct > 0) R.string.result_new_record else when (stars) {
+            3 -> R.string.result_stars_3
+            2 -> R.string.result_stars_2
+            1 -> R.string.result_stars_1
+            else -> R.string.result_stars_0
         }
 
-    val summary: String
+    val summary: UiText
         get() = if (mode == Mode.RACE) {
-            "$correct ${plural(correct, "poprawna odpowiedź", "poprawne odpowiedzi", "poprawnych odpowiedzi")} " +
-                "w 60 sekund. Rekord: $bestRace."
+            UiText.Quantity(R.plurals.result_summary_race, correct, listOf(correct, bestRace))
         } else {
-            "$correct z $ROUND dobrze. Zdobyte gwiazdki: $stars."
+            UiText.Res(R.string.result_summary_adventure, listOf(correct, ROUND, stars))
         }
 }

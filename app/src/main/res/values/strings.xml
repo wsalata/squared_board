@@ -1,3 +1,103 @@
 <resources>
-    <string name="app_name">Tabliczka w kratkę</string>
+    <string name="app_name">Times Tables Grid</string>
+
+    <!-- Home -->
+    <string name="home_title">Times Tables\nGrid</string>
+    <string name="home_subtitle">Multiplication and division up to 100</string>
+    <string name="home_stars_collected">Stars collected: %1$d</string>
+    <string name="home_sound_off">Turn sound off</string>
+    <string name="home_sound_on">Turn sound on</string>
+
+    <string name="section_practice">What are you practising?</string>
+    <string name="op_multiplication">Multiplication</string>
+    <string name="op_division">Division</string>
+    <string name="op_mixed">Mixed</string>
+    <string name="op_puzzles">Puzzles</string>
+
+    <string name="section_tables">Which numbers?</string>
+    <string name="tables_select_all">Select all</string>
+    <string name="tables_table_of">Table of %1$d</string>
+
+    <string name="section_input">How do you answer?</string>
+    <string name="input_choice">Pick the answer</string>
+    <string name="input_keypad">Type the answer</string>
+
+    <string name="play_adventure">Play</string>
+    <string name="play_adventure_detail">10 questions, collect 3 stars</string>
+    <string name="play_race">Race the clock</string>
+    <string name="play_race_detail">How many in 60 seconds?</string>
+    <string name="play_race_detail_record">How many in 60 seconds? Best: %1$d</string>
+
+    <!-- Progress card -->
+    <string name="progress_open_board">Show my board</string>
+    <string name="progress_my_board">My board</string>
+    <string name="progress_none">Every fact you master turns into a green square.</string>
+    <string name="progress_all">You know the whole board! You are a champion.</string>
+    <plurals name="progress_some">
+        <item quantity="one">You know %1$d fact out of 100. Keep playing to fill the board.</item>
+        <item quantity="other">You know %1$d facts out of 100. Keep playing to fill the board.</item>
+    </plurals>
+
+    <!-- Board -->
+    <string name="board_back">Back to menu</string>
+    <string name="board_reset">Reset progress</string>
+    <string name="board_reset_confirm">Are you sure? Tap again</string>
+    <string name="board_legend_new">New</string>
+    <string name="board_legend_learning">Learning</string>
+    <string name="board_legend_known">I know it</string>
+    <string name="board_tile_label">%1$d times %2$d equals %3$d</string>
+    <string name="board_hint">Tap a square to see the fact.</string>
+    <string name="board_tile_mastered">You know this one really well!</string>
+    <string name="board_tile_learning">You\'re practising this one. Nearly there!</string>
+    <string name="board_tile_new">This fact hasn\'t come up in a game yet.</string>
+
+    <!-- Game -->
+    <string name="game_quit">End game</string>
+    <string name="game_key_delete">Delete digit</string>
+    <string name="game_key_submit">Submit</string>
+    <string name="game_race_correct">Right: %1$d</string>
+    <string name="game_question_of">Question %1$d of %2$d</string>
+    <string name="game_next">Next</string>
+    <string name="game_see_result">See result</string>
+    <plurals name="game_correct_count">
+        <item quantity="one">%1$d right</item>
+        <item quantity="other">%1$d right</item>
+    </plurals>
+
+    <!-- Equations read aloud by screen readers -->
+    <string name="spoken_times">times</string>
+    <string name="spoken_divided_by">divided by</string>
+    <string name="spoken_equals">equals</string>
+    <string name="spoken_blank">what</string>
+
+    <!-- Feedback after an answer -->
+    <string name="praise_1">Well done!</string>
+    <string name="praise_2">Great!</string>
+    <string name="praise_3">Super!</string>
+    <string name="praise_4">Exactly right!</string>
+    <string name="praise_5">Keep it up!</string>
+    <string name="praise_6">Beautiful!</string>
+    <string name="praise_7">Awesome!</string>
+    <string name="feedback_streak">%1$d in a row! Amazing!</string>
+    <string name="feedback_typed">You typed %1$d. Remember: %2$s</string>
+    <string name="feedback_close">Almost! Remember: %1$s</string>
+
+    <!-- Result -->
+    <string name="result_new_record">New record!</string>
+    <string name="result_stars_3">Wonderful!</string>
+    <string name="result_stars_2">Very good!</string>
+    <string name="result_stars_1">Good start!</string>
+    <string name="result_stars_0">Try again!</string>
+    <plurals name="result_summary_race">
+        <item quantity="one">%1$d correct answer in 60 seconds. Best: %2$d.</item>
+        <item quantity="other">%1$d correct answers in 60 seconds. Best: %2$d.</item>
+    </plurals>
+    <string name="result_summary_adventure">%1$d out of %2$d right. Stars earned: %3$d.</string>
+    <string name="result_review">To review</string>
+    <string name="result_play_again">Play again</string>
+    <string name="result_back_to_menu">Back to menu</string>
+    <plurals name="result_stars_label">
+        <item quantity="one">%1$d star out of 3</item>
+        <item quantity="other">%1$d stars out of 3</item>
+    </plurals>
 </resources>

@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import eu.tudek.squared_board.R
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.ui.components.BackIcon
 import eu.tudek.squared_board.ui.components.SketchButton
@@ -55,9 +57,9 @@ fun BoardScreen(
                 onClick = onBack,
                 cornerRadius = 22.dp,
                 modifier = Modifier.size(width = 44.dp, height = 48.dp),
-                contentDescription = "Wróć do menu",
+                contentDescription = stringResource(R.string.board_back),
             ) { BackIcon() }
-            Text("Moja tabliczka", style = AppType.h1.copy(fontSize = 28.sp))
+            Text(stringResource(R.string.progress_my_board), style = AppType.h1.copy(fontSize = 28.sp))
         }
 
         Legend()
@@ -71,7 +73,7 @@ fun BoardScreen(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        if (resetArmed) "Na pewno? Dotknij jeszcze raz" else "Wyzeruj postępy",
+                        stringResource(if (resetArmed) R.string.board_reset_confirm else R.string.board_reset),
                         style = AppType.label.copy(color = if (resetArmed) Ink.white else Ink.ink),
                         maxLines = 1,
                     )
@@ -87,9 +89,9 @@ private fun Legend() {
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        LegendItem("Nowe", Ink.tiers[0], outlined = true)
-        LegendItem("Ćwiczę", Ink.tiers[2], outlined = false)
-        LegendItem("Umiem", Ink.tiers[5], outlined = false)
+        LegendItem(stringResource(R.string.board_legend_new), Ink.tiers[0], outlined = true)
+        LegendItem(stringResource(R.string.board_legend_learning), Ink.tiers[2], outlined = false)
+        LegendItem(stringResource(R.string.board_legend_known), Ink.tiers[5], outlined = false)
     }
 }
 
@@ -136,7 +138,7 @@ private fun BoardGrid(progress: Progress, selected: Pair<Int, Int>?, onSelect: (
                                 selected = selected == r to c,
                                 font = tileFont,
                                 modifier = Modifier.weight(1f),
-                                label = "$r razy $c równa się ${r * c}",
+                                label = stringResource(R.string.board_tile_label, r, c, r * c),
                                 onClick = { onSelect(r, c) },
                             )
                         }
@@ -206,7 +208,7 @@ private fun TileCaption(progress: Progress, selected: Pair<Int, Int>?) {
     Box(Modifier.fillMaxWidth().heightIn(min = 54.dp), contentAlignment = Alignment.TopCenter) {
         if (selected == null) {
             Text(
-                "Dotknij kratkę, żeby zobaczyć działanie.",
+                stringResource(R.string.board_hint),
                 style = AppType.h2.copy(fontSize = 19.sp, lineHeight = 25.sp),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp),
@@ -222,9 +224,9 @@ private fun TileCaption(progress: Progress, selected: Pair<Int, Int>?) {
                 )
                 Text(
                     when {
-                        level >= 4 -> "Umiesz to świetnie!"
-                        level >= 1 -> "Już to ćwiczysz. Jeszcze trochę!"
-                        else -> "Tego działania jeszcze nie było w grze."
+                        level >= 4 -> stringResource(R.string.board_tile_mastered)
+                        level >= 1 -> stringResource(R.string.board_tile_learning)
+                        else -> stringResource(R.string.board_tile_new)
                     },
                     style = AppType.body.copy(color = Ink.inkSoft),
                     textAlign = TextAlign.Center,

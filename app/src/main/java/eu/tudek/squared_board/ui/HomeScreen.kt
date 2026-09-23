@@ -26,11 +26,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import eu.tudek.squared_board.R
 import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.game.Mode
-import eu.tudek.squared_board.game.plural
 import eu.tudek.squared_board.ui.components.PlayIcon
 import eu.tudek.squared_board.ui.components.SketchButton
 import eu.tudek.squared_board.ui.components.SketchSurface
@@ -59,17 +61,17 @@ fun HomeScreen(
         HomeHeader(progress.stars, settings.sound, onToggleSound)
         ProgressCard(progress, onOpenBoard)
 
-        Section("Co ćwiczysz?") {
+        Section(stringResource(R.string.section_practice)) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OpChoice("3 · 4", "Mnożenie", settings.op == OpMode.MUL, Modifier.weight(1f)) { onOp(OpMode.MUL) }
-                    OpChoice("12 : 4", "Dzielenie", settings.op == OpMode.DIV, Modifier.weight(1f)) { onOp(OpMode.DIV) }
+                    OpChoice("3 · 4", stringResource(R.string.op_multiplication), settings.op == OpMode.MUL, Modifier.weight(1f)) { onOp(OpMode.MUL) }
+                    OpChoice("12 : 4", stringResource(R.string.op_division), settings.op == OpMode.DIV, Modifier.weight(1f)) { onOp(OpMode.DIV) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OpChoice("3 · 4   12 : 4", "Na zmianę", settings.op == OpMode.MIX, Modifier.weight(1f)) { onOp(OpMode.MIX) }
+                    OpChoice("3 · 4   12 : 4", stringResource(R.string.op_mixed), settings.op == OpMode.MIX, Modifier.weight(1f)) { onOp(OpMode.MIX) }
                     OpChoice(
                         example = "· 4 = 12",
-                        label = "Zagadki",
+                        label = stringResource(R.string.op_puzzles),
                         selected = settings.op == OpMode.MISS,
                         modifier = Modifier.weight(1f),
                         leadingBlank = true,
@@ -79,8 +81,8 @@ fun HomeScreen(
         }
 
         Section(
-            title = "Przez które liczby?",
-            action = if (settings.tables.size < 10) "Zaznacz wszystkie" to onSelectAll else null,
+            title = stringResource(R.string.section_tables),
+            action = if (settings.tables.size < 10) stringResource(R.string.tables_select_all) to onSelectAll else null,
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (rowStart in listOf(1, 6)) {
@@ -92,7 +94,7 @@ fun HomeScreen(
                                 modifier = Modifier.weight(1f),
                                 background = if (on) Ink.blue else Ink.white,
                                 cornerRadius = 12.dp,
-                                contentDescription = "Tabliczka przez $n",
+                                contentDescription = stringResource(R.string.tables_table_of, n),
                             ) {
                                 Box(Modifier.height(46.dp), contentAlignment = Alignment.Center) {
                                     Text(
@@ -111,12 +113,12 @@ fun HomeScreen(
             }
         }
 
-        Section("Jak odpowiadasz?") {
+        Section(stringResource(R.string.section_input)) {
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SegmentButton("Wybieram wynik", settings.input == InputMode.CHOICE, Modifier.weight(1f)) {
+                SegmentButton(stringResource(R.string.input_choice), settings.input == InputMode.CHOICE, Modifier.weight(1f)) {
                     onInput(InputMode.CHOICE)
                 }
-                SegmentButton("Wpisuję wynik", settings.input == InputMode.KEYPAD, Modifier.weight(1f)) {
+                SegmentButton(stringResource(R.string.input_keypad), settings.input == InputMode.KEYPAD, Modifier.weight(1f)) {
                     onInput(InputMode.KEYPAD)
                 }
             }
@@ -124,19 +126,19 @@ fun HomeScreen(
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 4.dp)) {
             PlayButton(
-                title = "Zagraj",
-                detail = "10 pytań, zbierz 3 gwiazdki",
+                title = stringResource(R.string.play_adventure),
+                detail = stringResource(R.string.play_adventure_detail),
                 background = Ink.green,
                 titleColor = Ink.white,
                 detailColor = Color(0xFFE7FFF3),
                 onClick = { onPlay(Mode.ADVENTURE) },
             ) { PlayIcon() }
             PlayButton(
-                title = "Wyścig z czasem",
+                title = stringResource(R.string.play_race),
                 detail = if (progress.bestRace > 0) {
-                    "Ile zdążysz w 60 sekund? Rekord: ${progress.bestRace}"
+                    stringResource(R.string.play_race_detail_record, progress.bestRace)
                 } else {
-                    "Ile zdążysz w 60 sekund?"
+                    stringResource(R.string.play_race_detail)
                 },
                 background = Ink.white,
                 titleColor = Ink.ink,
@@ -154,15 +156,16 @@ private fun HomeHeader(stars: Int, soundOn: Boolean, onToggleSound: () -> Unit) 
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
+        val starsLabel = stringResource(R.string.home_stars_collected, stars)
         Column(Modifier.weight(1f)) {
-            Text("Tabliczka\nw kratkę", style = AppType.h1)
+            Text(stringResource(R.string.home_title), style = AppType.h1)
             Spacer(Modifier.height(4.dp))
-            Text("Mnożenie i dzielenie do 100", style = AppType.body.copy(color = Ink.inkSoft))
+            Text(stringResource(R.string.home_subtitle), style = AppType.body.copy(color = Ink.inkSoft))
         }
         SketchSurface(
             background = Ink.white,
             cornerRadius = 22.dp,
-            modifier = Modifier.height(48.dp).semantics { contentDescription = "Zebrane gwiazdki: $stars" },
+            modifier = Modifier.height(48.dp).semantics { contentDescription = starsLabel },
         ) {
             Row(
                 Modifier.padding(start = 8.dp, end = 12.dp),
@@ -177,7 +180,7 @@ private fun HomeHeader(stars: Int, soundOn: Boolean, onToggleSound: () -> Unit) 
             onClick = onToggleSound,
             cornerRadius = 22.dp,
             modifier = Modifier.size(width = 44.dp, height = 48.dp),
-            contentDescription = if (soundOn) "Wyłącz dźwięk" else "Włącz dźwięk",
+            contentDescription = stringResource(if (soundOn) R.string.home_sound_off else R.string.home_sound_on),
         ) {
             SoundIcon(on = soundOn)
         }
@@ -192,7 +195,7 @@ private fun ProgressCard(progress: Progress, onOpenBoard: () -> Unit) {
         onClick = onOpenBoard,
         modifier = Modifier.fillMaxWidth(),
         cornerRadius = 18.dp,
-        contentDescription = "Pokaż moją tabliczkę",
+        contentDescription = stringResource(R.string.progress_open_board),
     ) {
         Row(
             Modifier.padding(14.dp),
@@ -212,15 +215,14 @@ private fun ProgressCard(progress: Progress, onOpenBoard: () -> Unit) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     when {
-                        mastered == 0 -> "Każde działanie, które opanujesz, zamieni się w zieloną kratkę."
-                        mastered == 100 -> "Znasz całą tabliczkę! Jesteś mistrzem."
-                        else -> "Umiesz $mastered ${plural(mastered, "działanie", "działania", "działań")} ze 100. " +
-                            "Graj dalej, żeby zapełnić tabliczkę."
+                        mastered == 0 -> stringResource(R.string.progress_none)
+                        mastered == 100 -> stringResource(R.string.progress_all)
+                        else -> pluralStringResource(R.plurals.progress_some, mastered, mastered)
                     },
                     style = AppType.body.copy(color = Ink.inkSoft),
                 )
                 Spacer(Modifier.height(8.dp))
-                Text("Moja tabliczka", style = AppType.bodyBold.copy(color = Ink.blue))
+                Text(stringResource(R.string.progress_my_board), style = AppType.bodyBold.copy(color = Ink.blue))
             }
         }
     }

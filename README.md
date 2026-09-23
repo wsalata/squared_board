@@ -1,6 +1,8 @@
 # Tabliczka w kratkę
 
-Aplikacja na Androida do nauki tabliczki mnożenia i dzielenia do 100. Interfejs wygląda jak zeszyt w kratkę — papier, granatowy atrament i ręcznie kreślone przyciski — a całość jest po polsku, z myślą o dzieciach w wieku wczesnoszkolnym.
+*[English version](README.en.md)*
+
+Aplikacja na Androida do nauki tabliczki mnożenia i dzielenia do 100. Interfejs wygląda jak zeszyt w kratkę — papier, granatowy atrament i ręcznie kreślone przyciski — z myślą o dzieciach w wieku wczesnoszkolnym. Dostępna po polsku i po angielsku.
 
 Projekt jest portem prototypu webowego na natywny Android; w kodzie znajdziesz komentarze odnoszące się do oryginału (`prefers-reduced-motion`, `max-width: 480px`, gradienty CSS rysujące kratkę).
 
@@ -39,7 +41,13 @@ Generator pytań (`QuestionGenerator`) nie losuje działań równomiernie:
 
 Postęp (`Progress`) trzyma dla każdego działania wynik 0–5: poprawna odpowiedź daje +1, błędna −2. Od 4 działanie liczy się jako opanowane. Klucz jest symetryczny (`tileKey`), więc `3 × 4` i `4 × 3` to jeden wpis — na planszy zapalają się oba kafelki naraz.
 
-Polska odmiana liczebników (`plural`) obsługuje trzy formy wraz z wyjątkiem dla nastek: „1 poprawna odpowiedź", „22 poprawne odpowiedzi", „14 poprawnych odpowiedzi".
+## Języki
+
+Angielski jest językiem domyślnym (`res/values/`), polski leży w `res/values-pl/`, więc telefon ustawiony na jakikolwiek trzeci język dostanie angielski, a nie polski. Żaden tekst nie jest zaszyty w kodzie.
+
+Odmianę przez liczbę obsługują zasoby `<plurals>`, czyli reguły CLDR wbudowane w Androida. Polski dostaje formy `one`/`few`/`many` wraz z wyjątkiem dla nastek („1 poprawna odpowiedź", „22 poprawne odpowiedzi", „14 poprawnych odpowiedzi"), angielski `one`/`other`.
+
+Teksty powstające poza kompozycją — pochwały i komentarze po odpowiedzi, tytuł ekranu wyniku — wędrują przez `UiText` jako identyfikator zasobu z argumentami, więc `AppViewModel` nie potrzebuje `Context`. Rozwijane są dopiero w composable przez `UiText.resolve()`.
 
 ## Stos technologiczny
 
@@ -47,7 +55,7 @@ Polska odmiana liczebników (`plural`) obsługuje trzy formy wraz z wyjątkiem d
 - **AGP 9.4.1**, Gradle z katalogiem wersji (`gradle/libs.versions.toml`) i configuration cache
 - **DataStore Preferences** — zapis postępów i ustawień
 - **Robolectric 4.17** — testy Compose na JVM, bez emulatora
-- minSdk 28, target/compileSdk 37, zgodność źródeł z Javą 11
+- minSdk 28, target/compileSdk 37, toolchain i zgodność źródeł z Javą 17
 - Czcionka Baloo 2 jako pojedynczy font zmienny (osie zamiast osobnych plików na każdą grubość)
 
 Cała grafika — ikony, konfetti, kreskowane ramki przycisków, kratka w tle — jest rysowana w `Canvas`/`drawBehind`. W zasobach nie ma bitmap poza ikoną launchera.
@@ -64,7 +72,7 @@ app/src/main/java/eu/tudek/squared_board/
 │   ├── AppViewModel.kt        stan aplikacji, przepływ rundy, timer wyścigu
 │   ├── GameState.kt           stan rundy i ekranu wyniku
 │   ├── Questions.kt           generator pytań i dystraktorów
-│   └── Polish.kt              odmiana liczebników
+│   └── UiText.kt              tekst jako identyfikator zasobu, rozwijany w UI
 ├── sound/Sfx.kt               synteza dźwięku na AudioTrack + wibracje
 └── ui/
     ├── SquaredBoardApp.kt     nawigacja między ekranami, obsługa Wstecz
@@ -78,10 +86,10 @@ app/src/main/java/eu/tudek/squared_board/
 
 ## Budowanie
 
-W systemie nie ma osobnego JDK — jedyna Java to ta wbudowana w Android Studio. Przed użyciem Gradle z terminala ustaw `JAVA_HOME` (fish):
+Potrzebny jest JDK w `PATH` — Gradle uruchamia na nim swojego demona, zanim jeszcze przeczyta pliki buildu. JDK kompilujący kod pobiera się sam (toolchain 17 + `foojay-resolver`), więc wystarczy dowolna w miarę świeża Java:
 
 ```fish
-set -Ux JAVA_HOME ~/android-studio/jbr
+sudo pacman -S jdk-openjdk        # albo: set -Ux JAVA_HOME ~/android-studio/jbr
 ```
 
 Następnie:
@@ -93,6 +101,18 @@ Następnie:
 ```
 
 Ścieżka do Android SDK trafia do `local.properties`, który nie jest wersjonowany. Android Studio generuje go przy pierwszym otwarciu projektu.
+
+## Wydania
+
+`bundleRelease` tworzy App Bundle w formacie oczekiwanym przez Google Play, z włączonym R8:
+
+```fish
+./gradlew bundleRelease
+```
+
+Podpisem sterują zmienne środowiskowe (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), a w ich braku właściwości Gradle (`SB_STORE_FILE` i pokrewne) z `~/.gradle/gradle.properties`. Gdy nie ma żadnych, build release nadal działa i wychodzi niepodpisany.
+
+`.github/workflows/release.yml` uruchamia to samo na tagu `v*`: testy jednostkowe, podpisany AAB i APK z sekretów repozytorium, weryfikacja przez `apksigner` i podpięcie bundle'a pod GitHub Release razem z `mapping.txt`. Ten plik mapowania trzeba zachować — bez niego stack trace z R8 jest nieczytelny.
 
 ## Testy
 
@@ -106,8 +126,8 @@ Następnie:
 | --- | --- |
 | `QuestionGeneratorTest` | kształt równań w każdym trybie, dobór tabliczek, dystraktory, ważenie słabych działań |
 | `ProgressTest` | punktacja, symetria klucza, próg opanowania |
-| `PolishTest` | trzy formy liczby mnogiej i wyjątek dla nastek |
-| `ScreenRenderTest` | renderowanie każdego ekranu przez Robolectric |
+| `LocalizationTest` | domyślne zasoby angielskie i angielska liczba mnoga |
+| `ScreenRenderTest` | renderowanie każdego ekranu przez Robolectric (kwalifikator `pl`) |
 | `AppFlowTest` | przejścia między ekranami, zmiana ustawień, start wyścigu |
 
 Robolectric renderuje ekrany Compose na JVM, więc emulator nie jest potrzebny — umożliwia to ustawienie `testOptions { unitTests { isIncludeAndroidResources = true } }` w `app/build.gradle.kts`.
@@ -117,7 +137,7 @@ Raport HTML po uruchomieniu: `app/build/reports/tests/testDebugUnitTest/index.ht
 ## Dostępność
 
 - Aplikacja respektuje systemowe wyłączenie animacji (`ValueAnimator.areAnimatorsEnabled()`) — wtedy nie ma konfetti ani potrząsania kartą.
-- Równania mają opis dla czytnika ekranu w formie mówionej (`Question.spoken()`): „3 razy 4 równa się ile".
+- Równania mają opis dla czytnika ekranu w formie mówionej (`Question.spoken()`): „3 razy 4 równa się ile". Słowa pochodzą z zasobów, więc czytnik mówi w języku telefonu.
 - Kafelki planszy i przyciski tabliczek mają `contentDescription`.
 - `ScaleToFit` zmniejsza równanie na wąskich ekranach zamiast je przycinać.
 - Kolor tekstu na kafelkach planszy dobiera się do jasności tła (`Ink.onTier`).

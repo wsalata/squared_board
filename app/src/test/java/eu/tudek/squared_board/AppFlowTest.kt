@@ -18,7 +18,8 @@ import org.robolectric.annotation.Config
  * that only breaks once the real pieces are wired up.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
+// Polski kwalifikator: te testy sprawdzają tłumaczenie z values-pl/.
+@Config(sdk = [34], qualifiers = "pl-rPL-w411dp-h891dp-xxhdpi")
 class AppFlowTest {
 
     @get:Rule

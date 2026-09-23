@@ -11,6 +11,14 @@ sealed interface Token {
     data object Blank : Token
 }
 
+/** The localised words a screen reader needs to read an equation out loud. */
+data class SpokenWords(
+    val times: String,
+    val dividedBy: String,
+    val equals: String,
+    val blank: String,
+)
+
 /** Whether the missing number is the product or one of the factors. */
 enum class AnswerKind { PRODUCT, FACTOR }
 
@@ -32,17 +40,17 @@ data class Question(
         }
     }
 
-    /** Spoken form for screen readers. */
-    fun spoken(): String = tokens.joinToString(" ") {
+    /** Spoken form for screen readers; the words come from the UI so they follow the locale. */
+    fun spoken(words: SpokenWords): String = tokens.joinToString(" ") {
         when (it) {
             is Token.Num -> it.value.toString()
             is Token.Sym -> when (it.text) {
-                "·" -> "razy"
-                ":" -> "podzielić przez"
-                "=" -> "równa się"
+                "·" -> words.times
+                ":" -> words.dividedBy
+                "=" -> words.equals
                 else -> it.text
             }
-            Token.Blank -> "ile"
+            Token.Blank -> words.blank
         }
     }
 }

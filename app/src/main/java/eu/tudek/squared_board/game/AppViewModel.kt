@@ -3,6 +3,7 @@ package eu.tudek.squared_board.game
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import eu.tudek.squared_board.R
 import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
@@ -19,7 +20,10 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-private val PRAISE = listOf("Brawo!", "Świetnie!", "Super!", "Dokładnie tak!", "Tak trzymaj!", "Pięknie!", "Ekstra!")
+private val PRAISE = listOf(
+    R.string.praise_1, R.string.praise_2, R.string.praise_3, R.string.praise_4,
+    R.string.praise_5, R.string.praise_6, R.string.praise_7,
+)
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -42,7 +46,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _selectedTile = MutableStateFlow<Pair<Int, Int>?>(null)
     val selectedTile: StateFlow<Pair<Int, Int>?> = _selectedTile.asStateFlow()
 
-    /** True once the player has armed "Wyzeruj postępy" and we are waiting for the confirming tap. */
+    /** True once the player has armed the progress reset and we are waiting for the confirming tap. */
     private val _resetArmed = MutableStateFlow(false)
     val resetArmed: StateFlow<Boolean> = _resetArmed.asStateFlow()
 
@@ -196,7 +200,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             locked = false,
             typed = "",
             chosen = null,
-            feedback = "",
+            feedback = null,
             feedbackOk = null,
             showNext = false,
         )
@@ -229,12 +233,16 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _progress.value = _progress.value.withAnswer(q.a, q.b, ok)
 
         val streak = if (ok) g.streak + 1 else 0
-        val feedback = if (ok) {
-            if (streak >= 5 && streak % 5 == 0) "$streak z rzędu! Niesamowite!" else PRAISE.random()
+        val feedback: UiText = if (ok) {
+            if (streak >= 5 && streak % 5 == 0) {
+                UiText.Res(R.string.feedback_streak, listOf(streak))
+            } else {
+                UiText.Res(PRAISE.random())
+            }
         } else if (_progress.value.settings.input == InputMode.KEYPAD) {
-            "Wpisano $value. Zapamiętaj: ${q.fullText()}"
+            UiText.Res(R.string.feedback_typed, listOf(value, q.fullText()))
         } else {
-            "Prawie! Zapamiętaj: ${q.fullText()}"
+            UiText.Res(R.string.feedback_close, listOf(q.fullText()))
         }
 
         var next = g.copy(
@@ -255,7 +263,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 index = g.index + 1,
                 // A right answer flows on by itself; a wrong one waits, so the fact can sink in.
                 showNext = !ok,
-                nextLabel = if (g.index + 1 >= ROUND) "Zobacz wynik" else "Dalej",
+                nextLabel = if (g.index + 1 >= ROUND) R.string.game_see_result else R.string.game_next,
             )
         }
         _game.value = next

@@ -36,13 +36,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import eu.tudek.squared_board.R
 import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.game.GameState
 import eu.tudek.squared_board.game.Mode
 import eu.tudek.squared_board.game.RACE_MS
 import eu.tudek.squared_board.game.ROUND
+import eu.tudek.squared_board.game.SpokenWords
 import eu.tudek.squared_board.game.Token
-import eu.tudek.squared_board.game.plural
+import eu.tudek.squared_board.game.resolve
 import eu.tudek.squared_board.ui.components.BackspaceIcon
 import eu.tudek.squared_board.ui.components.CloseIcon
 import eu.tudek.squared_board.ui.components.ScaleToFit
@@ -85,7 +89,7 @@ fun GameScreen(
                 background = Ink.yellow,
             ) {
                 Box(Modifier.height(60.dp), contentAlignment = Alignment.Center) {
-                    Text(state.nextLabel, style = AppType.button)
+                    Text(stringResource(state.nextLabel), style = AppType.button)
                 }
             }
         }
@@ -103,7 +107,7 @@ private fun TopBar(state: GameState, race: Boolean, onQuit: () -> Unit) {
             onClick = onQuit,
             cornerRadius = 22.dp,
             modifier = Modifier.size(width = 44.dp, height = 48.dp),
-            contentDescription = "Zakończ grę",
+            contentDescription = stringResource(R.string.game_quit),
         ) { CloseIcon() }
 
         if (race) TimerBar(state.millisLeft, Modifier.weight(1f)) else Track(state, Modifier.weight(1f))
@@ -198,7 +202,7 @@ private fun QuestionCard(state: GameState, animationsOn: Boolean) {
         ) {
             Equation(state)
             Text(
-                state.feedback,
+                state.feedback?.resolve().orEmpty(),
                 style = AppType.h2.copy(
                     fontSize = 19.sp,
                     lineHeight = 24.sp,
@@ -228,13 +232,21 @@ private fun shakeOffset(t: Float): Float = when {
 @Composable
 private fun Equation(state: GameState) {
     val q = state.question
+    val spoken = q.spoken(
+        SpokenWords(
+            times = stringResource(R.string.spoken_times),
+            dividedBy = stringResource(R.string.spoken_divided_by),
+            equals = stringResource(R.string.spoken_equals),
+            blank = stringResource(R.string.spoken_blank),
+        ),
+    )
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         // clamp(44px, 15vw, 72px) from the prototype's stylesheet; ScaleToFit takes over from there.
         val fontSize = min(max(44f, maxWidth.value * 0.15f), 72f)
         ScaleToFit(
             Modifier
                 .fillMaxWidth()
-                .semantics { contentDescription = q.spoken() },
+                .semantics { contentDescription = spoken },
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -302,12 +314,12 @@ private fun ScoreLine(state: GameState, race: Boolean) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         if (race) {
-            Text("Dobrze: ${state.correct}", style = style)
+            Text(stringResource(R.string.game_race_correct, state.correct), style = style)
             Text("${ceil(state.millisLeft / 1000.0).toInt()} s", style = style)
         } else {
-            Text("Pytanie ${state.shown} z $ROUND", style = style)
+            Text(stringResource(R.string.game_question_of, state.shown, ROUND), style = style)
             Text(
-                "${state.correct} ${plural(state.correct, "dobra", "dobre", "dobrych")}",
+                pluralStringResource(R.plurals.game_correct_count, state.correct, state.correct),
                 style = style,
             )
         }
@@ -371,8 +383,8 @@ private fun Keypad(onKey: (String) -> Unit) {
                         modifier = Modifier.weight(1f),
                         background = if (key == "ok") Ink.green else Ink.white,
                         contentDescription = when (key) {
-                            "del" -> "Usuń cyfrę"
-                            "ok" -> "Zatwierdź"
+                            "del" -> stringResource(R.string.game_key_delete)
+                            "ok" -> stringResource(R.string.game_key_submit)
                             else -> null
                         },
                     ) {

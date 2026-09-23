@@ -12,7 +12,9 @@ import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.data.Settings
 import eu.tudek.squared_board.game.AnswerKind
+import eu.tudek.squared_board.R
 import eu.tudek.squared_board.game.GameState
+import eu.tudek.squared_board.game.UiText
 import eu.tudek.squared_board.game.Mode
 import eu.tudek.squared_board.game.Question
 import eu.tudek.squared_board.game.ResultState
@@ -33,7 +35,8 @@ import org.robolectric.annotation.Config
  * and that the pieces the player needs are actually on screen.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
+// Polski kwalifikator: te testy sprawdzają tłumaczenie z values-pl/.
+@Config(sdk = [34], qualifiers = "pl-rPL-w411dp-h891dp-xxhdpi")
 class ScreenRenderTest {
 
     @get:Rule
@@ -162,7 +165,7 @@ class ScreenRenderTest {
                         choices = listOf(12, 15, 9, 16),
                         locked = true,
                         chosen = 15,
-                        feedback = "Prawie! Zapamiętaj: 3 · 4 = 12",
+                        feedback = UiText.Res(R.string.feedback_close, listOf("3 · 4 = 12")),
                         feedbackOk = false,
                         showNext = true,
                         index = 1,
