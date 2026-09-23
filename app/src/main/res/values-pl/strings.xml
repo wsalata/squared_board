@@ -1,0 +1,111 @@
+<resources>
+    <string name="app_name">Tabliczka w kratkę</string>
+
+    <!-- Ekran główny -->
+    <string name="home_title">Tabliczka\nw kratkę</string>
+    <string name="home_subtitle">Mnożenie i dzielenie do 100</string>
+    <string name="home_stars_collected">Zebrane gwiazdki: %1$d</string>
+    <string name="home_sound_off">Wyłącz dźwięk</string>
+    <string name="home_sound_on">Włącz dźwięk</string>
+
+    <string name="section_practice">Co ćwiczysz?</string>
+    <string name="op_multiplication">Mnożenie</string>
+    <string name="op_division">Dzielenie</string>
+    <string name="op_mixed">Na zmianę</string>
+    <string name="op_puzzles">Zagadki</string>
+
+    <string name="section_tables">Przez które liczby?</string>
+    <string name="tables_select_all">Zaznacz wszystkie</string>
+    <string name="tables_table_of">Tabliczka przez %1$d</string>
+
+    <string name="section_input">Jak odpowiadasz?</string>
+    <string name="input_choice">Wybieram wynik</string>
+    <string name="input_keypad">Wpisuję wynik</string>
+
+    <string name="play_adventure">Zagraj</string>
+    <string name="play_adventure_detail">10 pytań, zbierz 3 gwiazdki</string>
+    <string name="play_race">Wyścig z czasem</string>
+    <string name="play_race_detail">Ile zdążysz w 60 sekund?</string>
+    <string name="play_race_detail_record">Ile zdążysz w 60 sekund? Rekord: %1$d</string>
+
+    <!-- Karta postępów -->
+    <string name="progress_open_board">Pokaż moją tabliczkę</string>
+    <string name="progress_my_board">Moja tabliczka</string>
+    <string name="progress_none">Każde działanie, które opanujesz, zamieni się w zieloną kratkę.</string>
+    <string name="progress_all">Znasz całą tabliczkę! Jesteś mistrzem.</string>
+    <plurals name="progress_some">
+        <item quantity="one">Umiesz %1$d działanie ze 100. Graj dalej, żeby zapełnić tabliczkę.</item>
+        <item quantity="few">Umiesz %1$d działania ze 100. Graj dalej, żeby zapełnić tabliczkę.</item>
+        <item quantity="many">Umiesz %1$d działań ze 100. Graj dalej, żeby zapełnić tabliczkę.</item>
+        <item quantity="other">Umiesz %1$d działania ze 100. Graj dalej, żeby zapełnić tabliczkę.</item>
+    </plurals>
+
+    <!-- Tabliczka -->
+    <string name="board_back">Wróć do menu</string>
+    <string name="board_reset">Wyzeruj postępy</string>
+    <string name="board_reset_confirm">Na pewno? Dotknij jeszcze raz</string>
+    <string name="board_legend_new">Nowe</string>
+    <string name="board_legend_learning">Ćwiczę</string>
+    <string name="board_legend_known">Umiem</string>
+    <string name="board_tile_label">%1$d razy %2$d równa się %3$d</string>
+    <string name="board_hint">Dotknij kratkę, żeby zobaczyć działanie.</string>
+    <string name="board_tile_mastered">Umiesz to świetnie!</string>
+    <string name="board_tile_learning">Już to ćwiczysz. Jeszcze trochę!</string>
+    <string name="board_tile_new">Tego działania jeszcze nie było w grze.</string>
+
+    <!-- Gra -->
+    <string name="game_quit">Zakończ grę</string>
+    <string name="game_key_delete">Usuń cyfrę</string>
+    <string name="game_key_submit">Zatwierdź</string>
+    <string name="game_race_correct">Dobrze: %1$d</string>
+    <string name="game_question_of">Pytanie %1$d z %2$d</string>
+    <string name="game_next">Dalej</string>
+    <string name="game_see_result">Zobacz wynik</string>
+    <plurals name="game_correct_count">
+        <item quantity="one">%1$d dobra</item>
+        <item quantity="few">%1$d dobre</item>
+        <item quantity="many">%1$d dobrych</item>
+        <item quantity="other">%1$d dobre</item>
+    </plurals>
+
+    <!-- Równania czytane przez czytnik ekranu -->
+    <string name="spoken_times">razy</string>
+    <string name="spoken_divided_by">podzielić przez</string>
+    <string name="spoken_equals">równa się</string>
+    <string name="spoken_blank">ile</string>
+
+    <!-- Informacja zwrotna po odpowiedzi -->
+    <string name="praise_1">Brawo!</string>
+    <string name="praise_2">Świetnie!</string>
+    <string name="praise_3">Super!</string>
+    <string name="praise_4">Dokładnie tak!</string>
+    <string name="praise_5">Tak trzymaj!</string>
+    <string name="praise_6">Pięknie!</string>
+    <string name="praise_7">Ekstra!</string>
+    <string name="feedback_streak">%1$d z rzędu! Niesamowite!</string>
+    <string name="feedback_typed">Wpisano %1$d. Zapamiętaj: %2$s</string>
+    <string name="feedback_close">Prawie! Zapamiętaj: %1$s</string>
+
+    <!-- Wynik -->
+    <string name="result_new_record">Nowy rekord!</string>
+    <string name="result_stars_3">Wspaniale!</string>
+    <string name="result_stars_2">Bardzo dobrze!</string>
+    <string name="result_stars_1">Dobry początek!</string>
+    <string name="result_stars_0">Spróbuj jeszcze raz!</string>
+    <plurals name="result_summary_race">
+        <item quantity="one">%1$d poprawna odpowiedź w 60 sekund. Rekord: %2$d.</item>
+        <item quantity="few">%1$d poprawne odpowiedzi w 60 sekund. Rekord: %2$d.</item>
+        <item quantity="many">%1$d poprawnych odpowiedzi w 60 sekund. Rekord: %2$d.</item>
+        <item quantity="other">%1$d poprawne odpowiedzi w 60 sekund. Rekord: %2$d.</item>
+    </plurals>
+    <string name="result_summary_adventure">%1$d z %2$d dobrze. Zdobyte gwiazdki: %3$d.</string>
+    <string name="result_review">Do powtórki</string>
+    <string name="result_play_again">Zagraj jeszcze raz</string>
+    <string name="result_back_to_menu">Wróć do menu</string>
+    <plurals name="result_stars_label">
+        <item quantity="one">%1$d gwiazdka na 3</item>
+        <item quantity="few">%1$d gwiazdki na 3</item>
+        <item quantity="many">%1$d gwiazdek na 3</item>
+        <item quantity="other">%1$d gwiazdki na 3</item>
+    </plurals>
+</resources>
