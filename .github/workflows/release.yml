@@ -30,7 +30,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Testy jednostkowe
-        run: ./gradlew testReleaseUnitTest
+        run: ./gradlew testDebugUnitTest
 
       - name: Odszyfruj keystore
         env:
