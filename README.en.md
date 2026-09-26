@@ -112,7 +112,7 @@ The path to the Android SDK goes into `local.properties`, which is not versioned
 
 Signing is driven by environment variables (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), falling back to Gradle properties (`SB_STORE_FILE` and friends) in `~/.gradle/gradle.properties`. With neither present the release build still works and comes out unsigned.
 
-`.github/workflows/release.yml` runs the same build on a `v*` tag: unit tests, a signed AAB and APK from repository secrets, an `apksigner` check, and the bundle attached to the GitHub Release together with `mapping.txt`. Keep that mapping file — without it an R8 stack trace is unreadable.
+`.github/workflows/release.yml` runs the same build on a `v*` tag: unit tests, keystore validation, a signed AAB and APK from repository secrets, an `apksigner` check, and finally three version-named files attached to the GitHub Release — `squared-board-v1.2.3.aab` for Google Play, `squared-board-v1.2.3.apk` to install straight onto a phone, and `mapping-v1.2.3.txt`. Keep that mapping file — without it an R8 stack trace is unreadable.
 
 ## Tests
 

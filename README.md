@@ -112,7 +112,7 @@ Następnie:
 
 Podpisem sterują zmienne środowiskowe (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`), a w ich braku właściwości Gradle (`SB_STORE_FILE` i pokrewne) z `~/.gradle/gradle.properties`. Gdy nie ma żadnych, build release nadal działa i wychodzi niepodpisany.
 
-`.github/workflows/release.yml` uruchamia to samo na tagu `v*`: testy jednostkowe, podpisany AAB i APK z sekretów repozytorium, weryfikacja przez `apksigner` i podpięcie bundle'a pod GitHub Release razem z `mapping.txt`. Ten plik mapowania trzeba zachować — bez niego stack trace z R8 jest nieczytelny.
+`.github/workflows/release.yml` uruchamia to samo na tagu `v*`: testy jednostkowe, walidacja keystore'a, podpisany AAB i APK z sekretów repozytorium, weryfikacja przez `apksigner`, a na końcu podpięcie pod GitHub Release trzech plików z wersją w nazwie — `squared-board-v1.2.3.aab` do Google Play, `squared-board-v1.2.3.apk` do instalacji wprost z telefonu i `mapping-v1.2.3.txt`. Ten plik mapowania trzeba zachować — bez niego stack trace z R8 jest nieczytelny.
 
 ## Testy
 

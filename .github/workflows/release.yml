@@ -1,6 +1,7 @@
 name: Release
 
-# Tag v* buduje podpisany AAB i podpina go pod GitHub Release.
+# Tag v* buduje podpisany AAB i APK, i podpina oba pod GitHub Release:
+# AAB idzie do Google Play, APK do instalacji wprost z telefonu.
 # Uruchomienie ręczne (workflow_dispatch) buduje to samo, ale zostawia
 # pliki tylko jako artefakty przebiegu.
 on:
@@ -32,10 +33,37 @@ jobs:
       - name: Testy jednostkowe
         run: ./gradlew testDebugUnitTest
 
-      - name: Odszyfruj keystore
+      - name: Odszyfruj i zweryfikuj keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          ks="$RUNNER_TEMP/upload.jks"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$ks"
+
+          bytes=$(stat -c%s "$ks")
+          echo "Keystore po dekodowaniu: $bytes bajtow"
+          echo "Pierwsze bajty: $(head -c 8 "$ks" | od -An -tx1 | tr -s ' ')"
+          echo "Rozpoznany typ: $(file -b "$ks")"
+          if [ "$bytes" -lt 1000 ]; then
+            echo "::error::KEYSTORE_BASE64 daje plik $bytes bajtow - sekret jest pusty albo obciety."
+            exit 1
+          fi
+
+          if ! keytool -list -keystore "$ks" -storepass "$KEYSTORE_PASSWORD" > "$RUNNER_TEMP/aliases.txt" 2>&1; then
+            echo "::error::Keystore nie daje sie otworzyc. Blad ASN.1 = uszkodzony KEYSTORE_BASE64; blad o hasle = zle KEYSTORE_PASSWORD."
+            sed 's/^/    /' "$RUNNER_TEMP/aliases.txt"
+            exit 1
+          fi
+          sed 's/^/    /' "$RUNNER_TEMP/aliases.txt"
+
+          if ! grep -qi "^$KEY_ALIAS," "$RUNNER_TEMP/aliases.txt"; then
+            echo "::error::W keystore nie ma aliasu '$KEY_ALIAS' (porownanie bez wielkosci liter)."
+            exit 1
+          fi
+          echo "Keystore otwarty, alias '$KEY_ALIAS' znaleziony."
 
       - name: Zbuduj podpisany AAB i APK
         env:
@@ -60,10 +88,23 @@ jobs:
             app/build/outputs/apk/release/app-release.apk
             app/build/outputs/mapping/release/mapping.txt
 
+      # Nazwy z wersja: pobrany "app-release.apk" nic nie mowi o tym, co zawiera.
+      - name: Nazwij pliki wydania
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          mkdir -p "$RUNNER_TEMP/release"
+          cp app/build/outputs/bundle/release/app-release.aab "$RUNNER_TEMP/release/squared-board-$tag.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/release/squared-board-$tag.apk"
+          cp app/build/outputs/mapping/release/mapping.txt "$RUNNER_TEMP/release/mapping-$tag.txt"
+          ls -lh "$RUNNER_TEMP/release"
+
       - name: Podepnij pod GitHub Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            app/build/outputs/bundle/release/app-release.aab
-            app/build/outputs/mapping/release/mapping.txt
+            ${{ runner.temp }}/release/*.aab
+            ${{ runner.temp }}/release/*.apk
+            ${{ runner.temp }}/release/mapping-*.txt
