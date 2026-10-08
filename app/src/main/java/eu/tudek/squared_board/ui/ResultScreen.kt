@@ -1,7 +1,6 @@
 package eu.tudek.squared_board.ui
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,14 +25,18 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import eu.tudek.squared_board.data.StickerId
 import eu.tudek.squared_board.game.ResultState
+import eu.tudek.squared_board.game.Stickers
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import eu.tudek.squared_board.R
 import eu.tudek.squared_board.game.resolve
+import eu.tudek.squared_board.ui.components.PopEasing
 import eu.tudek.squared_board.ui.components.SketchSurface
 import eu.tudek.squared_board.ui.components.SketchButton
 import eu.tudek.squared_board.ui.components.StarIcon
+import eu.tudek.squared_board.ui.components.StickerIcon
 import eu.tudek.squared_board.ui.theme.AppType
 import eu.tudek.squared_board.ui.theme.Ink
 
@@ -62,6 +65,26 @@ fun ResultScreen(
                     style = AppType.body.copy(fontSize = 20.sp, lineHeight = 26.sp, color = Ink.inkSoft),
                     textAlign = TextAlign.Center,
                 )
+                if (state.bonusStar) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.daily_bonus_star),
+                        style = AppType.bodyBold.copy(fontSize = 17.sp, color = Ink.green),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                if (state.streak >= 2) {
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        pluralStringResource(R.plurals.streak_days, state.streak, state.streak),
+                        style = AppType.body.copy(color = Ink.inkSoft),
+                        textAlign = TextAlign.Center,
+                    )
+                }
+                if (state.newStickers.isNotEmpty()) {
+                    Spacer(Modifier.height(20.dp))
+                    StickerReveal(state.newStickers, animationsOn)
+                }
                 if (state.wrong.isNotEmpty()) {
                     Spacer(Modifier.height(18.dp))
                     Text(stringResource(R.string.result_review), style = AppType.h2)
@@ -92,6 +115,66 @@ fun ResultScreen(
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             ResultAction(stringResource(R.string.result_play_again), Ink.green, Ink.white, onAgain)
             ResultAction(stringResource(R.string.result_back_to_menu), Ink.white, Ink.ink, onMenu)
+        }
+    }
+}
+
+/**
+ * The payoff: whatever the round just unlocked, popping in one after another on the same
+ * overshoot curve as the stars above it.
+ */
+@Composable
+private fun StickerReveal(ids: List<StickerId>, animationsOn: Boolean) {
+    val shown = ids.take(3)
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            pluralStringResource(R.plurals.sticker_new, ids.size, ids.size),
+            style = AppType.h2.copy(fontSize = 20.sp),
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            shown.forEachIndexed { k, id ->
+                val pop = remember(id) { Animatable(if (animationsOn) 0f else 1f) }
+                LaunchedEffect(id, animationsOn) {
+                    if (animationsOn) {
+                        pop.snapTo(0f)
+                        pop.animateTo(1f, tween(durationMillis = 450, delayMillis = 200 + k * 180, easing = PopEasing))
+                    }
+                }
+                SketchSurface(
+                    modifier = Modifier.graphicsLayer {
+                        val v = pop.value
+                        scaleX = v
+                        scaleY = v
+                        alpha = if (v <= 0f) 0f else 1f
+                    },
+                    background = Ink.greenSoft,
+                    border = Ink.green,
+                    borderWidth = 2.dp,
+                    cornerRadius = 14.dp,
+                    depth = 0.dp,
+                ) {
+                    Column(
+                        Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        StickerIcon(id, unlocked = true, size = 60.dp)
+                        Text(
+                            stringResource(Stickers[id].name),
+                            style = AppType.body.copy(fontSize = 13.sp, color = Ink.ink),
+                            maxLines = 1,
+                        )
+                    }
+                }
+            }
+        }
+        if (ids.size > shown.size) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                stringResource(R.string.sticker_new_more, ids.size - shown.size),
+                style = AppType.body.copy(color = Ink.inkSoft),
+            )
         }
     }
 }
@@ -134,9 +217,6 @@ private fun BigStars(stars: Int, animationsOn: Boolean) {
         }
     }
 }
-
-/** The prototype's `cubic-bezier(.3, 1.6, .5, 1)` overshoot. */
-private val PopEasing = CubicBezierEasing(0.3f, 1.6f, 0.5f, 1f)
 
 @Composable
 private fun ResultAction(

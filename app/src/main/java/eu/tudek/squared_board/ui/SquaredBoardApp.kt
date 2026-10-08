@@ -39,7 +39,9 @@ fun SquaredBoardApp(animationsOn: Boolean, viewModel: AppViewModel = viewModel()
     val screen by viewModel.screen.collectAsStateWithLifecycle()
     val game by viewModel.game.collectAsStateWithLifecycle()
     val result by viewModel.result.collectAsStateWithLifecycle()
+    val daily by viewModel.daily.collectAsStateWithLifecycle()
     val selectedTile by viewModel.selectedTile.collectAsStateWithLifecycle()
+    val selectedSticker by viewModel.selectedSticker.collectAsStateWithLifecycle()
     val resetArmed by viewModel.resetArmed.collectAsStateWithLifecycle()
 
     // Back leaves whichever screen you are on, rather than the app.
@@ -69,8 +71,12 @@ fun SquaredBoardApp(animationsOn: Boolean, viewModel: AppViewModel = viewModel()
             when (screen) {
                 Screen.HOME -> HomeScreen(
                     progress = progress,
+                    daily = daily,
+                    animationsOn = animationsOn,
                     onToggleSound = viewModel::toggleSound,
                     onOpenBoard = viewModel::openBoard,
+                    onOpenStickers = viewModel::openStickers,
+                    onPlayDaily = viewModel::startDaily,
                     onOp = viewModel::setOp,
                     onToggleTable = viewModel::toggleTable,
                     onSelectAll = viewModel::selectAllTables,
@@ -106,6 +112,13 @@ fun SquaredBoardApp(animationsOn: Boolean, viewModel: AppViewModel = viewModel()
                     onBack = viewModel::goHome,
                     onSelect = viewModel::selectTile,
                     onReset = viewModel::resetProgress,
+                )
+
+                Screen.STICKERS -> StickersScreen(
+                    progress = progress,
+                    selected = selectedSticker,
+                    onBack = viewModel::goHome,
+                    onSelect = viewModel::selectSticker,
                 )
             }
         }

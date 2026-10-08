@@ -4,7 +4,7 @@
     <!-- Home -->
     <string name="home_title">Times Tables\nGrid</string>
     <string name="home_subtitle">Multiplication and division up to 100</string>
-    <string name="home_stars_collected">Stars collected: %1$d</string>
+    <string name="home_stars_collected">Stars collected: %1$d. Show my stickers</string>
     <string name="home_sound_off">Turn sound off</string>
     <string name="home_sound_on">Turn sound on</string>
 
@@ -99,5 +99,54 @@
     <plurals name="result_stars_label">
         <item quantity="one">%1$d star out of 3</item>
         <item quantity="other">%1$d stars out of 3</item>
+    </plurals>
+
+    <!-- Stickers -->
+    <string name="sticker_album_title">My stickers</string>
+    <string name="sticker_tap_hint">Tap a sticker to see how to get it.</string>
+    <string name="sticker_got_it">You have it! Well done.</string>
+    <string name="sticker_hint_table">Learn the whole table of %1$d</string>
+    <string name="sticker_hint_stars">Collect %1$d stars</string>
+    <string name="sticker_hint_board_full">Fill your whole board</string>
+    <string name="sticker_hint_race">Get %1$d right in one race</string>
+    <string name="sticker_new_more">and %1$d more</string>
+    <plurals name="sticker_album_count">
+        <item quantity="one">%1$d sticker out of %2$d</item>
+        <item quantity="other">%1$d stickers out of %2$d</item>
+    </plurals>
+    <plurals name="sticker_hint_streak">
+        <item quantity="one">Play %1$d day in a row</item>
+        <item quantity="other">Play %1$d days in a row</item>
+    </plurals>
+    <plurals name="sticker_new">
+        <item quantity="one">New sticker!</item>
+        <item quantity="other">%1$d new stickers!</item>
+    </plurals>
+    <string name="sticker_name_rocket">Rocket</string>
+    <string name="sticker_name_cat">Cat</string>
+    <string name="sticker_name_icecream">Ice cream</string>
+    <string name="sticker_name_dino">Dinosaur</string>
+    <string name="sticker_name_butterfly">Butterfly</string>
+    <string name="sticker_name_robot">Robot</string>
+    <string name="sticker_name_rainbow">Rainbow</string>
+    <string name="sticker_name_cupcake">Cupcake</string>
+    <string name="sticker_name_dragon">Dragon</string>
+    <string name="sticker_name_crown">Crown</string>
+    <string name="sticker_name_sun">Sun</string>
+    <string name="sticker_name_balloon">Balloon</string>
+    <string name="sticker_name_medal">Medal</string>
+    <string name="sticker_name_train">Train</string>
+    <string name="sticker_name_flower">Flower</string>
+    <string name="sticker_name_cake">Cake</string>
+
+    <!-- Streak and the challenge of the day -->
+    <string name="streak_none">Start a streak!</string>
+    <string name="daily_title">Challenge of the day</string>
+    <string name="daily_detail">5 questions picked just for you</string>
+    <string name="daily_done">Done! Come back tomorrow.</string>
+    <string name="daily_bonus_star">A bonus star for today\'s challenge!</string>
+    <plurals name="streak_days">
+        <item quantity="one">%1$d day in a row</item>
+        <item quantity="other">%1$d days in a row</item>
     </plurals>
 </resources>

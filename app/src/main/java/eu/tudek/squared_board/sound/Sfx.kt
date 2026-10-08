@@ -47,6 +47,9 @@ class Sfx(context: Context) {
 
     fun win() = tone(listOf(523.0, 659.0, 784.0, 1047.0), 0.12)
 
+    /** Brighter and longer than [win]: something has been *collected*. */
+    fun sticker() = tone(listOf(784.0, 988.0, 1319.0, 1568.0), 0.11)
+
     fun tap() = tone(listOf(520.0), 0.04, vol = 0.06)
 
     fun release() = player.shutdown()

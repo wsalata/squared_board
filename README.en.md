@@ -28,6 +28,10 @@ The project is a port of a web prototype to native Android; the code still carri
 
 **My board** — a 10 × 10 grid showing how well each fact is known, by tile colour. Progress can also be reset from here (it takes two taps).
 
+**Stickers** — sixteen doodles unlocked by mastering a whole table, by star thresholds, by a race record and by a run of days. Earned ones go into the album (`StickersScreen`); the rest wait as dashed slots that say what would open them. A sticker once earned stays earned — every rule is monotone, so a bad day takes nothing away.
+
+**A daily streak and the challenge of the day** — a row of seven days on the home screen, plus a short five-question round (`Mode.DAILY`) that leans harder on the weakest facts, once a day, for a bonus star. Any finished round keeps the streak alive, not only the challenge.
+
 **Sound and haptics** — `Sfx` synthesises short tones straight into an `AudioTrack` — a sine or triangle wave with a fast attack and exponential decay — so the APK contains no audio files at all.
 
 ## How the learning works
@@ -38,6 +42,8 @@ The question generator (`QuestionGenerator`) does not draw facts uniformly:
 - **A buffer of the last four** — a fact just asked is multiplied by 0.04, so the same question does not come back twice in a row.
 - **The trivial ones row quieted down** — multiplying by 1 gets a 0.35 multiplier, unless the player picked the 1 table alone.
 - **Believable distractors** — the three wrong answers are neighbouring multiples (`a·(b+1)`, `(a-1)·b`) and off-by-one slips, not random numbers.
+
+The day is an epoch-day number (`Clock.today()`), and all the streak arithmetic lives in pure `Progress` functions — `withDayPlayed`, `streakOn`, `challengeDone` — so it is testable with no clock and no view model. A clock moved backwards takes nothing away, and a second round on the same day adds nothing.
 
 Progress (`Progress`) keeps a 0–5 score per fact: a correct answer gives +1, a wrong one −2. From 4 up the fact counts as mastered. The key is symmetric (`tileKey`), so `3 × 4` and `4 × 3` are one entry — both tiles light up on the board at once.
 
@@ -66,23 +72,29 @@ Every graphic — icons, confetti, the sketched button outlines, the grid in the
 app/src/main/java/eu/tudek/squared_board/
 ├── MainActivity.kt            entry point, edge-to-edge, reads the system animation setting
 ├── data/
-│   ├── Progress.kt            progress and settings model, mastery logic
+│   ├── Clock.kt               the day as an epoch-day number, swapped out in tests
+│   ├── Stickers.kt            sticker ids — these are what reach the disk
+│   ├── Progress.kt            progress and settings model, mastery logic, streak arithmetic
 │   └── ProgressStore.kt       serialisation to DataStore
 ├── game/
-│   ├── AppViewModel.kt        app state, round flow, race timer
-│   ├── GameState.kt           state of a round and of the result screen
+│   ├── AppViewModel.kt        app state, round flow, race timer, sticker awarding
+│   ├── GameState.kt           state of a round, of the result screen and of the day strip
 │   ├── Questions.kt           question and distractor generator
+│   ├── StickerCatalog.kt      sticker names, hints and unlock rules
 │   └── UiText.kt              text as a resource id, resolved in the UI
 ├── sound/Sfx.kt               AudioTrack sound synthesis + haptics
 └── ui/
     ├── SquaredBoardApp.kt     navigation between screens, Back handling
-    ├── HomeScreen.kt          settings and mode choice
+    ├── HomeScreen.kt          settings, mode choice, the streak card
     ├── GameScreen.kt          equation, answers, keypad, question counter / clock
-    ├── ResultScreen.kt        stars, summary, facts to review
+    ├── ResultScreen.kt        stars, summary, new stickers, facts to review
     ├── BoardScreen.kt         the 10 × 10 board
-    ├── components/            Sketch, Paper, Confetti, Icons, ScaleToFit, Modifiers
+    ├── StickersScreen.kt      the sticker album
+    ├── components/            Sketch, Paper, Confetti, Icons, StickerArt, StreakStrip, …
     └── theme/Theme.kt         the Ink palette and text styles
 ```
+
+The sticker art is data, not code: `ui/components/StickerArt.kt` holds a map of id → layers, where a layer is an SVG path on the same 24 × 24 grid as the icons plus a colour from the `Ink` palette. One function draws them — the same one that draws the icons — so adding a sticker means adding a map entry.
 
 ## Building
 
@@ -116,7 +128,7 @@ Signing is driven by environment variables (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`
 
 ## Tests
 
-31 unit tests, all running on the JVM:
+80 unit tests, all running on the JVM:
 
 ```fish
 ./gradlew testDebugUnitTest
@@ -128,11 +140,15 @@ Signing is driven by environment variables (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`
 | `ProgressTest` | scoring, key symmetry, mastery threshold |
 | `LocalizationTest` | the English default resources and English plural forms |
 | `ScreenRenderTest` | rendering every screen through Robolectric (under the `pl` qualifier) |
-| `AppFlowTest` | screen transitions, changing settings, starting a race |
+| `AppFlowTest` | screen transitions, changing settings, starting a race and the daily challenge, the album |
+| `StreakTest` | extending and breaking a streak, a clock moved backwards, the seven-day strip |
+| `StickersTest` | unlock rules, catalogue completeness, monotonicity (a sticker cannot be lost) |
 
 Robolectric renders the Compose screens on the JVM, so no emulator is needed — that is what `testOptions { unitTests { isIncludeAndroidResources = true } }` in `app/build.gradle.kts` enables.
 
 The HTML report lands in `app/build/reports/tests/testDebugUnitTest/index.html`.
+
+Besides the store screenshots, `ScreenshotGenerator` writes `9-wszystkie-naklejki.png` — every drawing at once, which is the quickest way to eyeball the SVG paths after a change.
 
 ## Accessibility
 

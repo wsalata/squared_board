@@ -4,11 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import eu.tudek.squared_board.R
+import eu.tudek.squared_board.data.Clock
 import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.data.ProgressStore
 import eu.tudek.squared_board.data.Settings
+import eu.tudek.squared_board.data.StickerId
+import eu.tudek.squared_board.data.SystemClock
 import eu.tudek.squared_board.sound.Sfx
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,7 +28,13 @@ private val PRAISE = listOf(
     R.string.praise_5, R.string.praise_6, R.string.praise_7,
 )
 
-class AppViewModel(app: Application) : AndroidViewModel(app) {
+/** How much harder the challenge of the day leans on the facts the player is weakest at. */
+private const val DAILY_WEAK_BIAS = 3.0
+
+class AppViewModel(app: Application, private val clock: Clock) : AndroidViewModel(app) {
+
+    /** The constructor AndroidViewModelFactory finds by reflection. */
+    constructor(app: Application) : this(app, SystemClock)
 
     private val store = ProgressStore(app)
     val sfx = Sfx(app)
@@ -42,9 +51,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private val _result = MutableStateFlow<ResultState?>(null)
     val result: StateFlow<ResultState?> = _result.asStateFlow()
 
+    /** The streak strip and the challenge card: progress read against today's date. */
+    private val _daily = MutableStateFlow(DailyState.EMPTY)
+    val daily: StateFlow<DailyState> = _daily.asStateFlow()
+
     /** Which tile the board screen has selected, as a 1..10 row/column pair. */
     private val _selectedTile = MutableStateFlow<Pair<Int, Int>?>(null)
     val selectedTile: StateFlow<Pair<Int, Int>?> = _selectedTile.asStateFlow()
+
+    /** Which sticker the album has open, so its unlock rule can be spelled out underneath. */
+    private val _selectedSticker = MutableStateFlow<StickerId?>(null)
+    val selectedSticker: StateFlow<StickerId?> = _selectedSticker.asStateFlow()
 
     /** True once the player has armed the progress reset and we are waiting for the confirming tap. */
     private val _resetArmed = MutableStateFlow(false)
@@ -54,13 +71,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     private var timerJob: Job? = null
     private var advanceJob: Job? = null
 
+    /** The album as this round found it, so a table finished mid-round is still revealed at the end. */
+    private var stickersAtRoundStart: Set<StickerId> = emptySet()
+
     /** Set by the UI so shake and confetti honour the system animation setting. */
     var animationsOn: Boolean = true
 
     init {
         viewModelScope.launch {
-            _progress.value = store.progress.first()
-            sfx.enabled = _progress.value.settings.sound
+            val loaded = store.progress.first()
+            // Someone who already filled their board has earned most of the album: bank it
+            // quietly on this first load rather than avalanching reveals onto their next round.
+            val (backfilled, added) = loaded.awardStickers()
+            _progress.value = backfilled
+            sfx.enabled = backfilled.settings.sound
+            refreshDaily()
+            if (added.isNotEmpty()) persist()
         }
     }
 
@@ -75,7 +101,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun persist() {
         val snapshot = _progress.value
+        refreshDaily()
         viewModelScope.launch { store.save(snapshot) }
+    }
+
+    /** Recomputed rather than mapped from [progress], because it depends on the date too. */
+    private fun refreshDaily() {
+        _daily.value = DailyState.from(_progress.value, clock.today())
     }
 
     fun setOp(op: OpMode) {
@@ -118,8 +150,22 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         _screen.value = Screen.BOARD
     }
 
+    fun openStickers() {
+        sfx.tap()
+        _selectedSticker.value = null
+        _screen.value = Screen.STICKERS
+    }
+
+    fun selectSticker(id: StickerId) {
+        sfx.tap()
+        _selectedSticker.value = if (_selectedSticker.value == id) null else id
+    }
+
     fun goHome() {
         stopGame()
+        // Landing on the menu is the moment the strip is looked at, so re-read the date here
+        // as well: an app left open past midnight would otherwise show yesterday's row.
+        refreshDaily()
         _screen.value = Screen.HOME
     }
 
@@ -136,6 +182,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         }
         _resetArmed.value = false
         _selectedTile.value = null
+        _selectedSticker.value = null
+        // The album goes too: with a blank board it would be claiming things that are no
+        // longer true. This is already behind a confirming second tap.
         _progress.value = Progress(settings = _progress.value.settings)
         persist()
     }
@@ -145,19 +194,34 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     fun startGame(mode: Mode) {
         advanceJob?.cancel()
         timerJob?.cancel()
-        val gen = QuestionGenerator(_progress.value.settings, { _progress.value }) { Random.nextDouble() }
+        stickersAtRoundStart = _progress.value.stickers
+        val daily = mode == Mode.DAILY
+        val gen = QuestionGenerator(
+            settings = _progress.value.settings,
+            progress = { _progress.value },
+            random = { Random.nextDouble() },
+            weakBias = if (daily) DAILY_WEAK_BIAS else 1.0,
+        )
         generator = gen
         val q = gen.next()
         _game.value = GameState(
             mode = mode,
             question = q,
+            total = if (daily) DAILY_ROUND else ROUND,
             choices = if (_progress.value.settings.input == InputMode.CHOICE) gen.choices(q) else emptyList(),
         )
         _screen.value = Screen.GAME
         if (mode == Mode.RACE) startTimer()
     }
 
-    fun replay() = startGame(_result.value?.mode ?: Mode.ADVENTURE)
+    /** The challenge of the day. Tapping it again once it is done does nothing. */
+    fun startDaily() {
+        if (_progress.value.challengeDone(clock.today())) return
+        startGame(Mode.DAILY)
+    }
+
+    /** "Play again" never re-enters a challenge that has just been used up. */
+    fun replay() = startGame(_result.value?.mode?.takeIf { it != Mode.DAILY } ?: Mode.ADVENTURE)
 
     private fun startTimer() {
         val endAt = System.nanoTime() + RACE_MS * 1_000_000
@@ -180,6 +244,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
 
     fun quit() {
         stopGame()
+        refreshDaily()
         _screen.value = Screen.HOME
     }
 
@@ -188,7 +253,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val gen = generator ?: return
         advanceJob?.cancel()
         if (g.finished) return
-        if (g.mode == Mode.ADVENTURE && g.index >= ROUND) {
+        if (g.mode != Mode.RACE && g.index >= g.total) {
             finish()
             return
         }
@@ -230,7 +295,9 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         val q = g.question
         val ok = value == q.ans
 
-        _progress.value = _progress.value.withAnswer(q.a, q.b, ok)
+        // Banked as we go, so quitting halfway through never costs an unlock; the reveal
+        // still waits for the result screen.
+        _progress.value = _progress.value.withAnswer(q.a, q.b, ok).awardStickers().first
 
         val streak = if (ok) g.streak + 1 else 0
         val feedback: UiText = if (ok) {
@@ -257,13 +324,13 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
             shakeTick = if (ok) g.shakeTick else g.shakeTick + 1,
         )
 
-        if (g.mode == Mode.ADVENTURE) {
+        if (g.mode != Mode.RACE) {
             next = next.copy(
                 results = next.results.toMutableList().also { it[g.index] = ok },
                 index = g.index + 1,
                 // A right answer flows on by itself; a wrong one waits, so the fact can sink in.
                 showNext = !ok,
-                nextLabel = if (g.index + 1 >= ROUND) R.string.game_see_result else R.string.game_next,
+                nextLabel = if (g.index + 1 >= g.total) R.string.game_see_result else R.string.game_next,
             )
         }
         _game.value = next
@@ -271,7 +338,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         if (ok) sfx.good() else sfx.bad()
         persist()
 
-        if (g.mode == Mode.ADVENTURE) {
+        if (g.mode != Mode.RACE) {
             if (ok) later(800) { nextQuestion() }
         } else {
             later(if (ok) 450 else 1300) { nextQuestion() }
@@ -307,31 +374,50 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                 else -> 0
             }
         } else {
+            // The same thresholds the ten-question round has always used, as fractions, so a
+            // five-question challenge asks for a sensible four and three.
             when {
-                g.correct == ROUND -> 3
-                g.correct >= 8 -> 2
-                g.correct >= 5 -> 1
+                g.correct == g.total -> 3
+                g.correct >= g.total * 0.8 -> 2
+                g.correct >= g.total * 0.5 -> 1
                 else -> 0
             }
         }
+        val today = clock.today()
         val newRecord = race && g.correct > _progress.value.bestRace
-        _progress.value = _progress.value.copy(
-            stars = _progress.value.stars + stars,
+        val played = g.correct > 0
+        val bonusStar = g.mode == Mode.DAILY && played && !_progress.value.challengeDone(today)
+
+        var p = _progress.value.copy(
+            stars = _progress.value.stars + stars + if (bonusStar) 1 else 0,
             bestRace = if (newRecord) g.correct else _progress.value.bestRace,
         )
+        // Any finished round with something right counts as "I practised today" — a child who
+        // plays plenty but skips the challenge card must not lose their streak over it.
+        if (played) p = p.withDayPlayed(today)
+        if (bonusStar) p = p.copy(dailyDoneDay = today)
+        // Stars are credited first, so a round that pushes the counter past a threshold
+        // unlocks that sticker on this very result screen.
+        val awarded = p.awardStickers().first
+        _progress.value = awarded
         persist()
 
+        val revealed = (awarded.stickers - stickersAtRoundStart).toList()
         _result.value = ResultState(
             mode = g.mode,
+            total = g.total,
             stars = stars,
+            bonusStar = bonusStar,
             correct = g.correct,
-            bestRace = _progress.value.bestRace,
+            bestRace = awarded.bestRace,
             newRecord = newRecord,
             wrong = g.wrong.take(8).map { it.fullText() },
-            confetti = stars == 3 && animationsOn,
+            newStickers = revealed,
+            streak = awarded.streakOn(today),
+            confetti = (stars == 3 || revealed.isNotEmpty()) && animationsOn,
         )
         _screen.value = Screen.RESULT
-        if (stars >= 2 || newRecord) sfx.win()
+        if (revealed.isNotEmpty()) sfx.sticker() else if (stars >= 2 || newRecord) sfx.win()
     }
 
     override fun onCleared() {

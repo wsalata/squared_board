@@ -43,7 +43,6 @@ import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.game.GameState
 import eu.tudek.squared_board.game.Mode
 import eu.tudek.squared_board.game.RACE_MS
-import eu.tudek.squared_board.game.ROUND
 import eu.tudek.squared_board.game.SpokenWords
 import eu.tudek.squared_board.game.Token
 import eu.tudek.squared_board.game.resolve
@@ -122,14 +121,14 @@ private fun TopBar(state: GameState, race: Boolean, onQuit: () -> Unit) {
     }
 }
 
-/** Ten pips, one per question: outlined ahead, ink-ringed for the current one, then green or red. */
+/** One pip per question: outlined ahead, ink-ringed for the current one, then green or red. */
 @Composable
 private fun Track(state: GameState, modifier: Modifier = Modifier) {
     Row(
         modifier.clearAndSetSemantics { },
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        for (k in 0 until ROUND) {
+        for (k in 0 until state.total) {
             val result = state.results.getOrNull(k)
             val shape = RoundedCornerShape(4.dp)
             Box(
@@ -317,7 +316,7 @@ private fun ScoreLine(state: GameState, race: Boolean) {
             Text(stringResource(R.string.game_race_correct, state.correct), style = style)
             Text("${ceil(state.millisLeft / 1000.0).toInt()} s", style = style)
         } else {
-            Text(stringResource(R.string.game_question_of, state.shown, ROUND), style = style)
+            Text(stringResource(R.string.game_question_of, state.shown, state.total), style = style)
             Text(
                 pluralStringResource(R.plurals.game_correct_count, state.correct, state.correct),
                 style = style,

@@ -3,6 +3,7 @@ package eu.tudek.squared_board.game
 import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.data.Settings
+import kotlin.math.pow
 
 /** One piece of the rendered equation. */
 sealed interface Token {
@@ -61,11 +62,16 @@ private fun sym(s: String) = Token.Sym(s)
 /**
  * Draws facts the player is weakest at more often, avoids the last four, and keeps the
  * trivial ×1 row rare unless it is the only table selected.
+ *
+ * [weakBias] sharpens that first preference: raising the weight to a power leaves a fully
+ * mastered fact at 1 and pushes everything else further up, so the challenge of the day can
+ * lean on the shakiest facts without a second question picker to keep in step with this one.
  */
 class QuestionGenerator(
     private val settings: Settings,
     private val progress: () -> Progress,
     private val random: () -> Double = Math::random,
+    private val weakBias: Double = 1.0,
 ) {
     private val recent = ArrayDeque<String>()
 
@@ -75,7 +81,7 @@ class QuestionGenerator(
         var total = 0.0
         for (t in settings.tables) {
             for (x in 1..10) {
-                var w = 1 + (5 - p.score(t, x)) * 0.5
+                var w = (1 + (5 - p.score(t, x)) * 0.5).pow(weakBias)
                 if ((x == 1 || t == 1) && settings.tables.size > 1) w *= 0.35
                 if (Progress.tileKey(t, x) in recent) w *= 0.04
                 weighted.add(Triple(t, x, w))

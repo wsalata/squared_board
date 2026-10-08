@@ -6,7 +6,7 @@ Tabliczka w kratkę
 
 Tabliczka mnożenia i dzielenia do 100 na kartce w kratkę. Bez reklam.
 
-# Pełny opis (1902/4000)
+# Pełny opis (2577/4000)
 
 Tabliczka w kratkę to spokojna aplikacja do nauki tabliczki mnożenia i dzielenia do 100, zrobiona dla dzieci w wieku wczesnoszkolnym.
 
@@ -23,6 +23,14 @@ CZTERY RODZAJE DZIAŁAŃ
 • Dzielenie: 12 : 4 = ?
 • Na zmianę: raz jedno, raz drugie
 • Zagadki: ? · 4 = 12 — szukamy brakującego elementu równania
+
+NAKLEJKI
+
+Zebrane gwiazdki wreszcie na coś idą. Za opanowanie całej tabliczki, za kolejne progi gwiazdek, za rekord w wyścigu i za granie kilka dni z rzędu dziecko dostaje naklejkę do albumu — szesnaście rysunków w tej samej kresce co reszta aplikacji. Puste miejsca są podpisane, więc od początku widać, co jeszcze jest do zdobycia. Raz zdobytej naklejki nie da się stracić.
+
+CODZIENNA SERIA
+
+Na ekranie głównym siedem ostatnich dni z ptaszkami i krótkie wyzwanie dnia: pięć pytań dobranych z działań, które idą najsłabiej, raz dziennie, za dodatkową gwiazdkę. Serię podtrzymuje każda ukończona runda, nie tylko wyzwanie — dziecko, które po prostu dużo gra, nic nie traci.
 
 MOJA TABLICZKA
 

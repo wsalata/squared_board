@@ -27,7 +27,8 @@ import eu.tudek.squared_board.ui.theme.Ink
 private fun rememberIconPath(pathData: String): Path =
     remember(pathData) { PathParser().parsePathString(pathData).toPath() }
 
-private fun DrawScope.drawIcon(path: Path, stroke: Color?, fill: Color?, strokeWidth: Float) {
+/** Draws a path authored on the 24x24 grid, scaled and centred in the current bounds. */
+internal fun DrawScope.drawOn24Grid(path: Path, stroke: Color?, fill: Color?, strokeWidth: Float) {
     val s = minOf(size.width, size.height) / 24f
     translate((size.width - 24f * s) / 2f, (size.height - 24f * s) / 2f) {
         scale(s, s, pivot = Offset.Zero) {
@@ -49,7 +50,7 @@ private fun VectorIcon(
     strokeWidth: Float = 2.4f,
 ) {
     val path = rememberIconPath(pathData)
-    Canvas(modifier.size(size)) { drawIcon(path, stroke, fill, strokeWidth) }
+    Canvas(modifier.size(size)) { drawOn24Grid(path, stroke, fill, strokeWidth) }
 }
 
 /** Two paths drawn one over the other: a filled body with stroked detail on top. */
@@ -65,8 +66,8 @@ private fun LayeredIcon(
     val body = rememberIconPath(bodyData)
     val detail = rememberIconPath(detailData)
     Canvas(modifier.size(size)) {
-        drawIcon(body, Ink.ink, bodyFill, strokeWidth)
-        drawIcon(detail, Ink.ink, null, strokeWidth)
+        drawOn24Grid(body, Ink.ink, bodyFill, strokeWidth)
+        drawOn24Grid(detail, Ink.ink, null, strokeWidth)
     }
 }
 
@@ -112,9 +113,13 @@ fun StopwatchIcon(modifier: Modifier = Modifier, size: Dp = 30.dp) {
             center = Offset(this.size.width / 2f, 13.5f * s + (this.size.height - 24f * s) / 2f),
             style = Stroke(width = 2.4f * s),
         )
-        drawIcon(hands, Ink.ink, null, 2.4f)
+        drawOn24Grid(hands, Ink.ink, null, 2.4f)
     }
 }
+
+@Composable
+fun TickIcon(modifier: Modifier = Modifier, size: Dp = 18.dp, tint: Color = Ink.white) =
+    VectorIcon("M5 12.5l4.5 4.5L19 7", modifier, size, stroke = tint, strokeWidth = 3f)
 
 @Composable
 fun BackspaceIcon(modifier: Modifier = Modifier, size: Dp = 30.dp) = LayeredIcon(

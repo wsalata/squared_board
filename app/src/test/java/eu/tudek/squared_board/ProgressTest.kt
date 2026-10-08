@@ -2,6 +2,8 @@ package eu.tudek.squared_board
 
 import eu.tudek.squared_board.data.Progress
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ProgressTest {
@@ -48,5 +50,15 @@ class ProgressTest {
         repeat(4) { p = p.withAnswer(3, 7, correct = true) }
         // 3x7 and 7x3 are both filled on the board, so one learned fact lights two squares.
         assertEquals(2, p.mastered())
+    }
+
+    @Test
+    fun `a table counts as mastered only once all ten of its facts are`() {
+        var p = Progress()
+        for (x in 1..9) repeat(4) { p = p.withAnswer(7, x, correct = true) }
+        assertFalse(p.tableMastered(7))
+
+        repeat(4) { p = p.withAnswer(7, 10, correct = true) }
+        assertTrue(p.tableMastered(7))
     }
 }

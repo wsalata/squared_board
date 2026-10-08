@@ -4,7 +4,7 @@
     <!-- Ekran główny -->
     <string name="home_title">Tabliczka\nw kratkę</string>
     <string name="home_subtitle">Mnożenie i dzielenie do 100</string>
-    <string name="home_stars_collected">Zebrane gwiazdki: %1$d</string>
+    <string name="home_stars_collected">Zebrane gwiazdki: %1$d. Pokaż moje naklejki</string>
     <string name="home_sound_off">Wyłącz dźwięk</string>
     <string name="home_sound_on">Włącz dźwięk</string>
 
@@ -107,5 +107,62 @@
         <item quantity="few">%1$d gwiazdki na 3</item>
         <item quantity="many">%1$d gwiazdek na 3</item>
         <item quantity="other">%1$d gwiazdki na 3</item>
+    </plurals>
+
+    <!-- Naklejki -->
+    <string name="sticker_album_title">Moje naklejki</string>
+    <string name="sticker_tap_hint">Dotknij naklejki, żeby zobaczyć, jak ją zdobyć.</string>
+    <string name="sticker_got_it">Masz ją! Brawo.</string>
+    <string name="sticker_hint_table">Opanuj całą tabliczkę przez %1$d</string>
+    <string name="sticker_hint_stars">Zbierz %1$d gwiazdek</string>
+    <string name="sticker_hint_board_full">Zapełnij całą tabliczkę</string>
+    <string name="sticker_hint_race">Zrób %1$d dobrych w jednym wyścigu</string>
+    <string name="sticker_new_more">i jeszcze %1$d</string>
+    <plurals name="sticker_album_count">
+        <item quantity="one">%1$d naklejka z %2$d</item>
+        <item quantity="few">%1$d naklejki z %2$d</item>
+        <item quantity="many">%1$d naklejek z %2$d</item>
+        <item quantity="other">%1$d naklejki z %2$d</item>
+    </plurals>
+    <plurals name="sticker_hint_streak">
+        <item quantity="one">Graj %1$d dzień z rzędu</item>
+        <item quantity="few">Graj %1$d dni z rzędu</item>
+        <item quantity="many">Graj %1$d dni z rzędu</item>
+        <item quantity="other">Graj %1$d dnia z rzędu</item>
+    </plurals>
+    <plurals name="sticker_new">
+        <item quantity="one">Nowa naklejka!</item>
+        <item quantity="few">%1$d nowe naklejki!</item>
+        <item quantity="many">%1$d nowych naklejek!</item>
+        <item quantity="other">%1$d nowej naklejki!</item>
+    </plurals>
+    <string name="sticker_name_rocket">Rakieta</string>
+    <string name="sticker_name_cat">Kot</string>
+    <string name="sticker_name_icecream">Lody</string>
+    <string name="sticker_name_dino">Dinozaur</string>
+    <string name="sticker_name_butterfly">Motyl</string>
+    <string name="sticker_name_robot">Robot</string>
+    <string name="sticker_name_rainbow">Tęcza</string>
+    <string name="sticker_name_cupcake">Babeczka</string>
+    <string name="sticker_name_dragon">Smok</string>
+    <string name="sticker_name_crown">Korona</string>
+    <string name="sticker_name_sun">Słońce</string>
+    <string name="sticker_name_balloon">Balon</string>
+    <string name="sticker_name_medal">Medal</string>
+    <string name="sticker_name_train">Pociąg</string>
+    <string name="sticker_name_flower">Kwiatek</string>
+    <string name="sticker_name_cake">Tort</string>
+
+    <!-- Seria i wyzwanie dnia -->
+    <string name="streak_none">Zacznij serię!</string>
+    <string name="daily_title">Wyzwanie dnia</string>
+    <string name="daily_detail">5 pytań tylko dla ciebie</string>
+    <string name="daily_done">Gotowe! Wróć jutro.</string>
+    <string name="daily_bonus_star">Dodatkowa gwiazdka za wyzwanie dnia!</string>
+    <plurals name="streak_days">
+        <item quantity="one">%1$d dzień z rzędu</item>
+        <item quantity="few">%1$d dni z rzędu</item>
+        <item quantity="many">%1$d dni z rzędu</item>
+        <item quantity="other">%1$d dnia z rzędu</item>
     </plurals>
 </resources>

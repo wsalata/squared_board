@@ -1,11 +1,18 @@
 package eu.tudek.squared_board
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.data.Settings
+import eu.tudek.squared_board.game.DailyState
 import eu.tudek.squared_board.game.Mode
 import eu.tudek.squared_board.game.ResultState
 import eu.tudek.squared_board.ui.HomeScreen
@@ -39,21 +46,27 @@ class LocalizationTest {
     fun `the home screen falls back to English`() {
         compose.setContent {
             SquaredBoardTheme {
-                HomeScreen(
-                    progress = progress(3 to 4, 6 to 7),
-                    onToggleSound = {},
-                    onOpenBoard = {},
-                    onOp = {},
-                    onToggleTable = {},
-                    onSelectAll = {},
-                    onInput = {},
-                    onPlay = {},
-                )
+                Scrolling {
+                    HomeScreen(
+                        progress = progress(3 to 4, 6 to 7),
+                        daily = DailyState.EMPTY,
+                        animationsOn = false,
+                        onToggleSound = {},
+                        onOpenBoard = {},
+                        onOpenStickers = {},
+                        onPlayDaily = {},
+                        onOp = {},
+                        onToggleTable = {},
+                        onSelectAll = {},
+                        onInput = {},
+                        onPlay = {},
+                    )
+                }
             }
         }
         compose.onNodeWithText("Times Tables\nGrid").assertIsDisplayed()
         compose.onNodeWithText("Multiplication").assertIsDisplayed()
-        compose.onNodeWithText("Race the clock").assertIsDisplayed()
+        compose.onNodeWithText("Race the clock").performScrollTo().assertIsDisplayed()
         // The same four squares as the Polish test, worded with the English "other" form.
         compose.onNodeWithText("You know 4 facts out of 100. Keep playing to fill the board.")
             .assertIsDisplayed()
@@ -83,4 +96,10 @@ class LocalizationTest {
         compose.onNodeWithText("Good start!").assertIsDisplayed()
         compose.onNodeWithText("1 correct answer in 60 seconds. Best: 9.").assertIsDisplayed()
     }
+
+/** The app shell scrolls, so a bare render of a tall screen must scroll too. */
+@Composable
+private fun Scrolling(content: @Composable () -> Unit) {
+    Column(Modifier.verticalScroll(rememberScrollState())) { content() }
+}
 }

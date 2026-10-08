@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,7 +31,9 @@ import eu.tudek.squared_board.R
 import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
+import eu.tudek.squared_board.game.DailyState
 import eu.tudek.squared_board.game.Mode
+import eu.tudek.squared_board.game.Stickers
 import eu.tudek.squared_board.ui.components.PlayIcon
 import eu.tudek.squared_board.ui.components.SketchButton
 import eu.tudek.squared_board.ui.components.SketchSurface
@@ -41,15 +42,22 @@ import eu.tudek.squared_board.ui.components.dashedRoundBox
 import eu.tudek.squared_board.ui.components.innerOutline
 import eu.tudek.squared_board.ui.components.textButton
 import eu.tudek.squared_board.ui.components.StarIcon
+import eu.tudek.squared_board.ui.components.StickerIcon
 import eu.tudek.squared_board.ui.components.StopwatchIcon
+import eu.tudek.squared_board.ui.components.StreakStrip
+import eu.tudek.squared_board.ui.components.TickIcon
 import eu.tudek.squared_board.ui.theme.AppType
 import eu.tudek.squared_board.ui.theme.Ink
 
 @Composable
 fun HomeScreen(
     progress: Progress,
+    daily: DailyState,
+    animationsOn: Boolean,
     onToggleSound: () -> Unit,
     onOpenBoard: () -> Unit,
+    onOpenStickers: () -> Unit,
+    onPlayDaily: () -> Unit,
     onOp: (OpMode) -> Unit,
     onToggleTable: (Int) -> Unit,
     onSelectAll: () -> Unit,
@@ -58,8 +66,9 @@ fun HomeScreen(
 ) {
     val settings = progress.settings
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        HomeHeader(progress.stars, settings.sound, onToggleSound)
+        HomeHeader(progress, settings.sound, onToggleSound, onOpenStickers)
         ProgressCard(progress, onOpenBoard)
+        DailyCard(daily, animationsOn, onPlayDaily)
 
         Section(stringResource(R.string.section_practice)) {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -150,30 +159,39 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHeader(stars: Int, soundOn: Boolean, onToggleSound: () -> Unit) {
+private fun HomeHeader(
+    progress: Progress,
+    soundOn: Boolean,
+    onToggleSound: () -> Unit,
+    onOpenStickers: () -> Unit,
+) {
     Row(
         Modifier.fillMaxWidth().padding(top = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        val starsLabel = stringResource(R.string.home_stars_collected, stars)
         Column(Modifier.weight(1f)) {
             Text(stringResource(R.string.home_title), style = AppType.h1)
             Spacer(Modifier.height(4.dp))
             Text(stringResource(R.string.home_subtitle), style = AppType.body.copy(color = Ink.inkSoft))
         }
-        SketchSurface(
-            background = Ink.white,
+        // The star count is what the album is earned with, so it doubles as the way in —
+        // which also gives the badge something to do besides counting.
+        val latest = Stickers.all.lastOrNull { it.id in progress.stickers }?.id
+        SketchButton(
+            onClick = onOpenStickers,
             cornerRadius = 22.dp,
-            modifier = Modifier.height(48.dp).semantics { contentDescription = starsLabel },
+            modifier = Modifier.height(48.dp),
+            contentDescription = stringResource(R.string.home_stars_collected, progress.stars),
         ) {
             Row(
-                Modifier.padding(start = 8.dp, end = 12.dp),
+                Modifier.padding(start = 8.dp, end = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 StarIcon(filled = true)
-                Text("$stars", style = AppType.h2.copy(fontSize = 18.sp, fontWeight = FontWeight.ExtraBold))
+                Text("${progress.stars}", style = AppType.h2.copy(fontSize = 18.sp, fontWeight = FontWeight.ExtraBold))
+                if (latest != null) StickerIcon(latest, unlocked = true, size = 24.dp)
             }
         }
         SketchButton(
@@ -225,6 +243,60 @@ private fun ProgressCard(progress: Progress, onOpenBoard: () -> Unit) {
                 Text(stringResource(R.string.progress_my_board), style = AppType.bodyBold.copy(color = Ink.blue))
             }
         }
+    }
+}
+
+/**
+ * The streak strip and the challenge of the day in one card. Once the challenge is done the
+ * card stops being a button rather than staying tappable and inert, which only confuses
+ * someone who is seven.
+ */
+@Composable
+private fun DailyCard(daily: DailyState, animationsOn: Boolean, onPlay: () -> Unit) {
+    val body: @Composable () -> Unit = {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            // No "your streak" heading: the row of weekday letters says that by itself.
+            if (daily.streak > 0) {
+                Text(
+                    pluralStringResource(R.plurals.streak_days, daily.streak, daily.streak),
+                    style = AppType.bodyBold.copy(color = Ink.green),
+                )
+            } else {
+                Text(stringResource(R.string.streak_none), style = AppType.bodyBold.copy(color = Ink.inkSoft))
+            }
+            StreakStrip(daily, animationsOn)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (daily.challengeDone) {
+                    Box(
+                        Modifier.size(28.dp).clip(CircleShape).background(Ink.green),
+                        contentAlignment = Alignment.Center,
+                    ) { TickIcon(size = 17.dp) }
+                    Text(stringResource(R.string.daily_done), style = AppType.bodyBold)
+                } else {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.daily_title), style = AppType.button.copy(fontSize = 19.sp))
+                        Text(stringResource(R.string.daily_detail), style = AppType.body.copy(color = Ink.inkSoft))
+                    }
+                    PlayIcon(size = 26.dp, tint = Ink.ink)
+                }
+            }
+        }
+    }
+    if (daily.challengeDone) {
+        SketchSurface(Modifier.fillMaxWidth(), background = Ink.greenSoft, cornerRadius = 18.dp) { body() }
+    } else {
+        SketchButton(
+            onClick = onPlay,
+            modifier = Modifier.fillMaxWidth(),
+            cornerRadius = 18.dp,
+            contentDescription = stringResource(R.string.daily_title),
+        ) { body() }
     }
 }
 

@@ -1,5 +1,10 @@
 package eu.tudek.squared_board
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.assertCountEquals
@@ -7,12 +12,16 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import eu.tudek.squared_board.data.InputMode
 import eu.tudek.squared_board.data.OpMode
 import eu.tudek.squared_board.data.Progress
 import eu.tudek.squared_board.data.Settings
 import eu.tudek.squared_board.game.AnswerKind
 import eu.tudek.squared_board.R
+import eu.tudek.squared_board.data.StickerId
+import eu.tudek.squared_board.game.DAILY_ROUND
+import eu.tudek.squared_board.game.DailyState
 import eu.tudek.squared_board.game.GameState
 import eu.tudek.squared_board.game.UiText
 import eu.tudek.squared_board.game.Mode
@@ -23,7 +32,9 @@ import eu.tudek.squared_board.ui.BoardScreen
 import eu.tudek.squared_board.ui.GameScreen
 import eu.tudek.squared_board.ui.HomeScreen
 import eu.tudek.squared_board.ui.ResultScreen
+import eu.tudek.squared_board.ui.StickersScreen
 import eu.tudek.squared_board.ui.theme.SquaredBoardTheme
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -60,23 +71,29 @@ class ScreenRenderTest {
     fun `home screen shows the settings and both game modes`() {
         compose.setContent {
             SquaredBoardTheme {
-                HomeScreen(
-                    progress = progress(3 to 4, 6 to 7),
-                    onToggleSound = {},
-                    onOpenBoard = {},
-                    onOp = {},
-                    onToggleTable = {},
-                    onSelectAll = {},
-                    onInput = {},
-                    onPlay = {},
-                )
+                Scrolling {
+                    HomeScreen(
+                        progress = progress(3 to 4, 6 to 7),
+                        daily = DailyState.EMPTY,
+                        animationsOn = false,
+                        onToggleSound = {},
+                        onOpenBoard = {},
+                        onOpenStickers = {},
+                        onPlayDaily = {},
+                        onOp = {},
+                        onToggleTable = {},
+                        onSelectAll = {},
+                        onInput = {},
+                        onPlay = {},
+                    )
+                }
             }
         }
         compose.onNodeWithText("Tabliczka\nw kratkę").assertIsDisplayed()
         compose.onNodeWithText("Mnożenie").assertIsDisplayed()
         compose.onNodeWithText("Zagadki").assertIsDisplayed()
-        compose.onNodeWithText("Zagraj").assertIsDisplayed()
-        compose.onNodeWithText("Wyścig z czasem").assertIsDisplayed()
+        compose.onNodeWithText("Zagraj").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Wyścig z czasem").performScrollTo().assertIsDisplayed()
         // Two learned facts light four squares: 3x4, 4x3, 6x7 and 7x6.
         compose.onNodeWithText("Umiesz 4 działania ze 100. Graj dalej, żeby zapełnić tabliczkę.")
             .assertIsDisplayed()
@@ -87,11 +104,15 @@ class ScreenRenderTest {
     fun `home screen offers select-all only while tables are missing`() {
         compose.setContent {
             SquaredBoardTheme {
-                HomeScreen(
-                    progress = progress(settings = Settings(tables = (1..10).toList())),
-                    onToggleSound = {}, onOpenBoard = {}, onOp = {},
-                    onToggleTable = {}, onSelectAll = {}, onInput = {}, onPlay = {},
-                )
+                Scrolling {
+                    HomeScreen(
+                        progress = progress(settings = Settings(tables = (1..10).toList())),
+                        daily = DailyState.EMPTY,
+                        animationsOn = false,
+                        onToggleSound = {}, onOpenBoard = {}, onOpenStickers = {}, onPlayDaily = {}, onOp = {},
+                        onToggleTable = {}, onSelectAll = {}, onInput = {}, onPlay = {},
+                    )
+                }
             }
         }
         compose.onNodeWithText("Zaznacz wszystkie").assertDoesNotExist()
@@ -288,4 +309,138 @@ class ScreenRenderTest {
         compose.onNodeWithText("Na pewno? Dotknij jeszcze raz").assertIsDisplayed()
         compose.onNodeWithText("Dotknij kratkę, żeby zobaczyć działanie.").assertIsDisplayed()
     }
+
+    @Test
+    fun `the home screen shows the streak and the challenge of the day`() {
+        compose.setContent {
+            SquaredBoardTheme {
+                Scrolling {
+                    HomeScreen(
+                        progress = progress(3 to 4),
+                        daily = DailyState(
+                            streak = 3,
+                            days = listOf(false, false, false, false, true, true, true),
+                            firstDay = 20_000,
+                        ),
+                        animationsOn = false,
+                        onToggleSound = {}, onOpenBoard = {}, onOpenStickers = {}, onPlayDaily = {},
+                        onOp = {}, onToggleTable = {}, onSelectAll = {}, onInput = {}, onPlay = {},
+                    )
+                }
+            }
+        }
+        compose.onNodeWithText("3 dni z rzędu").assertIsDisplayed()
+        compose.onNodeWithText("Wyzwanie dnia").assertIsDisplayed()
+        compose.onNodeWithText("5 pytań tylko dla ciebie").assertIsDisplayed()
+    }
+
+    @Test
+    fun `a finished challenge stops inviting another go`() {
+        compose.setContent {
+            SquaredBoardTheme {
+                Scrolling {
+                    HomeScreen(
+                        progress = progress(),
+                        daily = DailyState(streak = 1, firstDay = 20_000, challengeDone = true),
+                        animationsOn = false,
+                        onToggleSound = {}, onOpenBoard = {}, onOpenStickers = {}, onPlayDaily = {},
+                        onOp = {}, onToggleTable = {}, onSelectAll = {}, onInput = {}, onPlay = {},
+                    )
+                }
+            }
+        }
+        compose.onNodeWithText("Gotowe! Wróć jutro.").assertIsDisplayed()
+        compose.onNodeWithText("5 pytań tylko dla ciebie").assertDoesNotExist()
+    }
+
+    @Test
+    fun `the album shows what is earned and what it would take to earn the rest`() {
+        var picked: StickerId? = null
+        compose.setContent {
+            SquaredBoardTheme {
+                StickersScreen(
+                    progress = Progress(stickers = setOf(StickerId.TABLE_7)),
+                    selected = null,
+                    onBack = {},
+                    onSelect = { picked = it },
+                )
+            }
+        }
+        compose.onNodeWithText("Moje naklejki").assertIsDisplayed()
+        compose.onNodeWithText("1 naklejka z 16").assertIsDisplayed()
+        compose.onNodeWithText("Dotknij naklejki, żeby zobaczyć, jak ją zdobyć.").assertIsDisplayed()
+        // Locked slots describe their own rule rather than all reading "locked".
+        compose.onNodeWithContentDescription("Opanuj całą tabliczkę przez 4").assertIsDisplayed()
+
+        compose.onNodeWithContentDescription("Tęcza").performClick()
+        assertEquals(StickerId.TABLE_7, picked)
+    }
+
+    @Test
+    fun `a selected sticker explains itself`() {
+        compose.setContent {
+            SquaredBoardTheme {
+                StickersScreen(
+                    progress = Progress(stickers = setOf(StickerId.TABLE_7)),
+                    selected = StickerId.STREAK_7,
+                    onBack = {}, onSelect = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Tort").assertIsDisplayed()
+        compose.onNodeWithText("Graj 7 dni z rzędu").assertIsDisplayed()
+    }
+
+    @Test
+    fun `the result screen reveals a new sticker and the bonus star`() {
+        compose.setContent {
+            SquaredBoardTheme {
+                ResultScreen(
+                    state = ResultState(
+                        mode = Mode.DAILY,
+                        total = DAILY_ROUND,
+                        stars = 3,
+                        bonusStar = true,
+                        correct = 5,
+                        bestRace = 0,
+                        newRecord = false,
+                        wrong = emptyList(),
+                        newStickers = listOf(StickerId.TABLE_7),
+                        streak = 4,
+                        confetti = false,
+                    ),
+                    animationsOn = false,
+                    onAgain = {},
+                    onMenu = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Nowa naklejka!").assertIsDisplayed()
+        compose.onNodeWithText("Tęcza").assertIsDisplayed()
+        compose.onNodeWithText("Dodatkowa gwiazdka za wyzwanie dnia!").assertIsDisplayed()
+        compose.onNodeWithText("4 dni z rzędu").assertIsDisplayed()
+        compose.onNodeWithText("5 z 5 dobrze. Zdobyte gwiazdki: 3.").assertIsDisplayed()
+    }
+
+    /** Guards the round length having become state rather than a constant. */
+    @Test
+    fun `a five-question round counts to five`() {
+        compose.setContent {
+            SquaredBoardTheme {
+                GameScreen(
+                    state = GameState(mode = Mode.DAILY, question = question, total = DAILY_ROUND),
+                    input = InputMode.CHOICE,
+                    animationsOn = false,
+                    onQuit = {}, onAnswer = {}, onKey = {}, onNext = {},
+                )
+            }
+        }
+        compose.onNodeWithText("Pytanie 1 z 5").assertIsDisplayed()
+    }
+
+/** The app shell scrolls, so a bare render of a tall screen must scroll too. */
+@Composable
+private fun Scrolling(content: @Composable () -> Unit) {
+    Column(Modifier.verticalScroll(rememberScrollState())) { content() }
+}
 }

@@ -15,7 +15,11 @@ class QuestionGeneratorTest {
 
     private fun generator(op: OpMode, tables: List<Int> = listOf(2, 3, 4, 5, 6, 7, 8, 9, 10)): QuestionGenerator {
         val random = Random(1234)
-        return QuestionGenerator(Settings(op = op, tables = tables), { Progress() }) { random.nextDouble() }
+        return QuestionGenerator(
+            settings = Settings(op = op, tables = tables),
+            progress = { Progress() },
+            random = { random.nextDouble() },
+        )
     }
 
     /** The blank always holds the answer, so filling it in must produce a true statement. */
@@ -123,7 +127,11 @@ class QuestionGeneratorTest {
         var progress = Progress()
         repeat(5) { progress = progress.withAnswer(4, 6, correct = true) }
         val random = Random(99)
-        val gen = QuestionGenerator(Settings(op = OpMode.MUL, tables = listOf(4)), { progress }) { random.nextDouble() }
+        val gen = QuestionGenerator(
+            settings = Settings(op = OpMode.MUL, tables = listOf(4)),
+            progress = { progress },
+            random = { random.nextDouble() },
+        )
         var mastered = 0
         var weak = 0
         repeat(2000) {
@@ -131,5 +139,31 @@ class QuestionGeneratorTest {
             if (q.b == 6) mastered++ else if (q.b == 7) weak++
         }
         assertTrue("mastered=$mastered weak=$weak", weak > mastered * 2)
+    }
+
+    /** What makes the challenge of the day a challenge rather than another random round. */
+    @Test
+    fun `a higher weak bias drills the weak fact harder still`() {
+        var progress = Progress()
+        repeat(5) { progress = progress.withAnswer(4, 6, correct = true) }
+
+        fun weakShare(bias: Double): Double {
+            val random = Random(99)
+            val gen = QuestionGenerator(
+                settings = Settings(op = OpMode.MUL, tables = listOf(4)),
+                progress = { progress },
+                random = { random.nextDouble() },
+                weakBias = bias,
+            )
+            var mastered = 0
+            var weak = 0
+            repeat(2000) {
+                val q = gen.next()
+                if (q.b == 6) mastered++ else if (q.b == 7) weak++
+            }
+            return weak.toDouble() / mastered
+        }
+
+        assertTrue(weakShare(3.0) > weakShare(1.0) * 2)
     }
 }

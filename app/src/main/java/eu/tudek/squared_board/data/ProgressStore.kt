@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,6 +28,11 @@ class ProgressStore(context: Context) {
                 .joinToString(",") { "${it.key}:${it.value}" }
             prefs[KEY_STARS] = p.stars
             prefs[KEY_BEST_RACE] = p.bestRace
+            prefs[KEY_LAST_DAY] = p.lastPlayedDay
+            prefs[KEY_STREAK] = p.streak
+            prefs[KEY_BEST_STREAK] = p.bestStreak
+            prefs[KEY_DAILY_DONE] = p.dailyDoneDay
+            prefs[KEY_STICKERS] = p.stickers.mapTo(mutableSetOf()) { it.name }
             prefs[KEY_OP] = p.settings.op.name
             prefs[KEY_TABLES] = p.settings.tables.joinToString(",")
             prefs[KEY_INPUT] = p.settings.input.name
@@ -53,6 +59,13 @@ class ProgressStore(context: Context) {
             tiles = tiles,
             stars = this[KEY_STARS] ?: 0,
             bestRace = this[KEY_BEST_RACE] ?: 0,
+            lastPlayedDay = this[KEY_LAST_DAY] ?: 0,
+            streak = this[KEY_STREAK] ?: 0,
+            bestStreak = this[KEY_BEST_STREAK] ?: 0,
+            dailyDoneDay = this[KEY_DAILY_DONE] ?: 0,
+            // A name this build no longer knows is dropped rather than crashing the load.
+            stickers = (this[KEY_STICKERS] ?: emptySet())
+                .mapNotNullTo(mutableSetOf()) { name -> StickerId.entries.firstOrNull { it.name == name } },
             settings = Settings(
                 op = this[KEY_OP]?.let { name -> OpMode.entries.firstOrNull { it.name == name } } ?: defaults.op,
                 tables = tables.ifEmpty { defaults.tables },
@@ -66,6 +79,11 @@ class ProgressStore(context: Context) {
         val KEY_TILES = stringPreferencesKey("tiles")
         val KEY_STARS = intPreferencesKey("stars")
         val KEY_BEST_RACE = intPreferencesKey("bestRace")
+        val KEY_LAST_DAY = intPreferencesKey("lastPlayedDay")
+        val KEY_STREAK = intPreferencesKey("streak")
+        val KEY_BEST_STREAK = intPreferencesKey("bestStreak")
+        val KEY_DAILY_DONE = intPreferencesKey("dailyDoneDay")
+        val KEY_STICKERS = stringSetPreferencesKey("stickers")
         val KEY_OP = stringPreferencesKey("op")
         val KEY_TABLES = stringPreferencesKey("tables")
         val KEY_INPUT = stringPreferencesKey("input")

@@ -28,6 +28,10 @@ Projekt jest portem prototypu webowego na natywny Android; w kodzie znajdziesz k
 
 **Moja tabliczka** — plansza 10 × 10 pokazująca opanowanie każdego działania kolorem kafelka. Stąd też można wyzerować postępy (wymaga dwóch dotknięć).
 
+**Naklejki** — szesnaście rysunkowych doodli odblokowywanych za opanowanie całej tabliczki, progi gwiazdek, rekord wyścigu i serię dni. Zdobyte lądują w albumie (`StickersScreen`), niezdobyte czekają jako kreskowane miejsca z podpowiedzią, co je otworzy. Raz zdobyta naklejka zostaje — reguły są monotoniczne, więc gorszy dzień nie odbiera dziecku niczego.
+
+**Codzienna seria i wyzwanie dnia** — rządek siedmiu dni z ptaszkami na ekranie głównym oraz krótka, pięciopytaniowa runda (`Mode.DAILY`) mocniej dociskająca najsłabsze działania, raz dziennie, za dodatkową gwiazdkę. Serię podbija każda ukończona runda, nie tylko wyzwanie.
+
 **Dźwięk i wibracje** — `Sfx` syntezuje krótkie dźwięki bezpośrednio w `AudioTrack` — fala sinusoidalna lub trójkątna z szybkim atakiem i wykładniczym wybrzmieniem — więc w APK nie ma żadnych plików audio.
 
 ## Jak działa nauka
@@ -38,6 +42,8 @@ Generator pytań (`QuestionGenerator`) nie losuje działań równomiernie:
 - **Bufor ostatnich czterech** — świeżo zadane działanie dostaje mnożnik 0.04, żeby to samo pytanie nie wracało pod rząd.
 - **Wyciszona jedynka** — mnożenie przez 1 dostaje mnożnik 0.35, chyba że gracz wybrał wyłącznie tabliczkę przez 1.
 - **Wiarygodne dystraktory** — trzy błędne odpowiedzi to sąsiednie wielokrotności (`a·(b+1)`, `(a-1)·b`) i pomyłki o ±1, a nie losowe liczby.
+
+Dzień liczony jest jako numer epoki (`Clock.today()`), a cała arytmetyka serii siedzi w czystych funkcjach `Progress` — `withDayPlayed`, `streakOn`, `challengeDone` — więc testuje się ją bez zegara i bez ViewModelu. Cofnięty zegar nic nie zabiera, a powtórka tego samego dnia nic nie dodaje.
 
 Postęp (`Progress`) trzyma dla każdego działania wynik 0–5: poprawna odpowiedź daje +1, błędna −2. Od 4 działanie liczy się jako opanowane. Klucz jest symetryczny (`tileKey`), więc `3 × 4` i `4 × 3` to jeden wpis — na planszy zapalają się oba kafelki naraz.
 
@@ -66,23 +72,29 @@ Cała grafika — ikony, konfetti, kreskowane ramki przycisków, kratka w tle �
 app/src/main/java/eu/tudek/squared_board/
 ├── MainActivity.kt            punkt wejścia, edge-to-edge, odczyt ustawień animacji systemu
 ├── data/
-│   ├── Progress.kt            model postępów i ustawień, logika opanowania działań
-│   └── ProgressStore.kt       serializacja do DataStore
+│   ├── Clock.kt               dzień jako numer epoki, podmieniany w testach
+│   ├── Progress.kt            model postępów i ustawień, opanowanie działań, arytmetyka serii
+│   ├── ProgressStore.kt       serializacja do DataStore
+│   └── Stickers.kt            identyfikatory naklejek (to one trafiają na dysk)
 ├── game/
-│   ├── AppViewModel.kt        stan aplikacji, przepływ rundy, timer wyścigu
-│   ├── GameState.kt           stan rundy i ekranu wyniku
+│   ├── AppViewModel.kt        stan aplikacji, przepływ rundy, timer wyścigu, przyznawanie naklejek
+│   ├── GameState.kt           stan rundy, ekranu wyniku i paska dni
 │   ├── Questions.kt           generator pytań i dystraktorów
+│   ├── StickerCatalog.kt      nazwy, podpowiedzi i reguły zdobycia naklejek
 │   └── UiText.kt              tekst jako identyfikator zasobu, rozwijany w UI
 ├── sound/Sfx.kt               synteza dźwięku na AudioTrack + wibracje
 └── ui/
     ├── SquaredBoardApp.kt     nawigacja między ekranami, obsługa Wstecz
-    ├── HomeScreen.kt          ustawienia i wybór trybu
+    ├── HomeScreen.kt          ustawienia, wybór trybu, karta serii
     ├── GameScreen.kt          równanie, odpowiedzi, klawiatura, licznik pytań / zegar
-    ├── ResultScreen.kt        gwiazdki, podsumowanie, działania do powtórki
+    ├── ResultScreen.kt        gwiazdki, podsumowanie, nowe naklejki, działania do powtórki
     ├── BoardScreen.kt         plansza 10 × 10
-    ├── components/            Sketch, Paper, Confetti, Icons, ScaleToFit, Modifiers
+    ├── StickersScreen.kt      album naklejek
+    ├── components/            Sketch, Paper, Confetti, Icons, StickerArt, StreakStrip, …
     └── theme/Theme.kt         paleta Ink i style tekstu
 ```
+
+Rysunki naklejek to dane, nie kod: `ui/components/StickerArt.kt` trzyma mapę identyfikator → lista warstw, gdzie warstwa to ścieżka SVG na siatce 24 × 24 i kolor z palety `Ink`. Rysuje je jedna funkcja, ta sama, która rysuje ikony, więc dodanie naklejki to dopisanie wpisu do mapy.
 
 ## Budowanie
 
@@ -116,7 +128,7 @@ Podpisem sterują zmienne środowiskowe (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `
 
 ## Testy
 
-31 testów jednostkowych, wszystkie działające na JVM:
+80 testów jednostkowych, wszystkie działające na JVM:
 
 ```fish
 ./gradlew testDebugUnitTest
@@ -128,11 +140,15 @@ Podpisem sterują zmienne środowiskowe (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `
 | `ProgressTest` | punktacja, symetria klucza, próg opanowania |
 | `LocalizationTest` | domyślne zasoby angielskie i angielska liczba mnoga |
 | `ScreenRenderTest` | renderowanie każdego ekranu przez Robolectric (kwalifikator `pl`) |
-| `AppFlowTest` | przejścia między ekranami, zmiana ustawień, start wyścigu |
+| `AppFlowTest` | przejścia między ekranami, zmiana ustawień, start wyścigu i wyzwania dnia, album |
+| `StreakTest` | przedłużenie i przerwanie serii, cofnięty zegar, pasek siedmiu dni |
+| `StickersTest` | reguły zdobycia, kompletność katalogu, monotoniczność (naklejki nie da się stracić) |
 
 Robolectric renderuje ekrany Compose na JVM, więc emulator nie jest potrzebny — umożliwia to ustawienie `testOptions { unitTests { isIncludeAndroidResources = true } }` w `app/build.gradle.kts`.
 
 Raport HTML po uruchomieniu: `app/build/reports/tests/testDebugUnitTest/index.html`.
+
+`ScreenshotGenerator` poza zrzutami do sklepu generuje też `9-wszystkie-naklejki.png` — cały komplet rysunków naraz, czyli najszybszy sposób, żeby obejrzeć ścieżki SVG po zmianie.
 
 ## Dostępność
 

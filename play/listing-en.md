@@ -6,7 +6,7 @@ Times Tables Grid
 
 Multiplication and division up to 100 on squared paper. No ads.
 
-# Full description (1808/4000)
+# Full description (2480/4000)
 
 Times Tables Grid is a calm app for learning multiplication and division up to 100, made for children in their first school years.
 
@@ -23,6 +23,14 @@ FOUR KINDS OF FACTS
 • Division: 12 : 4 = ?
 • Mixed: one, then the other
 • Puzzles: ? · 4 = 12 — find the missing part of the equation
+
+STICKERS
+
+The stars finally buy something. Mastering a whole table, passing a star threshold, setting a race record or playing several days in a row each earns a sticker for the album — sixteen drawings in the same hand as the rest of the app. The empty slots are labelled, so it is clear from the start what is still out there. A sticker once earned can never be lost.
+
+A DAILY STREAK
+
+The home screen shows the last seven days with ticks, plus a short challenge of the day: five questions drawn from whatever is going worst, once a day, for a bonus star. Any finished round keeps the streak alive, not just the challenge — a child who simply plays a lot loses nothing.
 
 MY BOARD
 

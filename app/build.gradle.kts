@@ -17,6 +17,11 @@ val releaseKeyPassword = providers.environmentVariable("KEY_PASSWORD")
 // Każdy plik wysłany do sklepu musi mieć wyższy versionCode niż poprzedni.
 val ciVersionCode = providers.environmentVariable("VERSION_CODE").orNull?.toInt()
 
+// Na tagu versionName bierze się z jego nazwy, więc squared-board-v1.1.0.apk nie może
+// zgłaszać się w systemie jako inna wersja. Wartość niżej zostaje dla buildów lokalnych
+// i ręcznych uruchomień workflow — tam tagu nie ma.
+val ciVersionName = providers.environmentVariable("VERSION_NAME").orNull
+
 android {
     namespace = "eu.tudek.squared_board"
     compileSdk {
@@ -28,7 +33,7 @@ android {
         minSdk = 28
         targetSdk = 37
         versionCode = ciVersionCode ?: 1
-        versionName = "1.0.0"
+        versionName = ciVersionName ?: "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -58,6 +63,10 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    lint {
+        // Nothing failed the build when a string landed in only one of the two locales.
+        error += "MissingTranslation"
     }
     testOptions {
         unitTests {
