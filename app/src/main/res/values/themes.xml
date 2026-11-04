@@ -1,5 +1,18 @@
 <resources>
-    <style name="Theme.Squared_board" parent="android:Theme.Material.Light.NoActionBar">
+    <!--
+        Edge-to-edge is set up here and in MainActivity instead of with androidx.activity's
+        enableEdgeToEdge(): that helper calls Window.setStatusBarColor/setNavigationBarColor and
+        LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES, which Play Console flags as deprecated in
+        Android 15. On API 35+ the system enforces edge-to-edge and ignores the bar colours below;
+        they only make the bars transparent on API 28-34.
+    -->
+    <style name="Base.Theme.Squared_board" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/paper</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
+
+    <style name="Theme.Squared_board" parent="Base.Theme.Squared_board" />
 </resources>

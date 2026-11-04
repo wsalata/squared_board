@@ -1,0 +1,6 @@
+<resources>
+    <!-- "always" is the non-deprecated replacement for "shortEdges". -->
+    <style name="Theme.Squared_board" parent="Base.Theme.Squared_board">
+        <item name="android:windowLayoutInDisplayCutoutMode">always</item>
+    </style>
+</resources>
